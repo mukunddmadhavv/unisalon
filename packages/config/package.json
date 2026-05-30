@@ -1,0 +1,12 @@
+{
+  "name": "@unisalon/config",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./eslint": "./eslint.js",
+    "./tailwind": "./tailwind.js",
+    "./tsconfig": "./tsconfig.json",
+    "./tsconfig/react": "./tsconfig.react.json",
+    "./tsconfig/bun": "./tsconfig.bun.json"
+  }
+}

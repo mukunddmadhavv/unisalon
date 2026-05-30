@@ -1,0 +1,9 @@
+{
+  "extends": "../../packages/config/tsconfig.bun.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] },
+    "types": ["bun-types"]
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,363 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // required for Supabase connection pooling
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum ShopStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ShopCategory {
+  MALE
+  FEMALE
+  UNISEX
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum HoldStatus {
+  ACTIVE
+  CONVERTED
+  EXPIRED
+  RELEASED
+}
+
+enum NotifType {
+  NEW_BOOKING
+  BOOKING_CANCELLED
+  BOOKING_REMINDER
+  SHOP_APPROVED
+  SHOP_REJECTED
+}
+
+enum ServiceCategory {
+  HAIRCUT
+  BEARD
+  FACIAL
+  MASSAGE
+  HAIR_COLOR
+  HAIR_SPA
+  WAXING
+  KERATIN
+  STRAIGHTENING
+  OTHER
+}
+
+// ─────────────────────────────────────────────
+// Users & Auth
+// ─────────────────────────────────────────────
+
+model User {
+  id         String    @id @default(uuid())
+  supabaseId String    @unique // links to Supabase Auth UID
+  email      String    @unique
+  phone      String?
+  name       String
+  role       Role      @default(CUSTOMER)
+  avatarUrl  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  bookings   Booking[]
+  reviews    Review[]
+  slotHolds  SlotHold[]
+
+  @@index([supabaseId])
+  @@map("users")
+}
+
+model ShopOwner {
+  id         String   @id @default(uuid())
+  supabaseId String   @unique
+  email      String   @unique
+  phone      String
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shops      Shop[]
+
+  @@index([supabaseId])
+  @@map("shop_owners")
+}
+
+// ─────────────────────────────────────────────
+// Shop
+// ─────────────────────────────────────────────
+
+model Shop {
+  id          String       @id @default(uuid())
+  ownerId     String
+  owner       ShopOwner    @relation(fields: [ownerId], references: [id])
+
+  name        String
+  slug        String       @unique
+  description String?
+  category    ShopCategory @default(UNISEX)
+  status      ShopStatus   @default(PENDING)
+
+  // Location
+  address     String
+  city        String
+  district    String       // for geolocation fallback filter
+  state       String
+  pincode     String
+  latitude    Float?
+  longitude   Float?
+
+  // Operating Hours
+  openTime    String       // "09:00"
+  closeTime   String       // "21:00"
+  workingDays String[]     // ["MON","TUE","WED","THU","FRI","SAT"]
+
+  // Media
+  coverImage  String?
+  images      String[]
+
+  // Ratings (denormalized for performance)
+  rating       Float @default(0)
+  totalReviews Int   @default(0)
+  isVerified   Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  services      Service[]
+  staff         StaffMember[]
+  bookings      Booking[]
+  reviews       Review[]
+  slotHolds     SlotHold[]
+  notifications ShopNotification[]
+  adminLogs     AdminLog[]
+
+  @@index([city, status])
+  @@index([district, status])
+  @@index([slug])
+  @@index([latitude, longitude])
+  @@map("shops")
+}
+
+// ─────────────────────────────────────────────
+// Staff
+// ─────────────────────────────────────────────
+
+model StaffMember {
+  id             String   @id @default(uuid())
+  shopId         String
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  name           String
+  photoUrl       String?
+  specialization String?  // "Hair Styling", "Beard Expert", "Colouring"
+  experience     String?  // "3 years"
+  bio            String?
+  isActive       Boolean  @default(true)
+  displayOrder   Int      @default(0) // for ordering in UI
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bookings       Booking[]
+  slotHolds      SlotHold[]
+
+  @@index([shopId, isActive])
+  @@map("staff_members")
+}
+
+// ─────────────────────────────────────────────
+// Services
+// ─────────────────────────────────────────────
+
+model Service {
+  id           String          @id @default(uuid())
+  shopId       String
+  shop         Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  name         String
+  description  String?
+  category     ServiceCategory
+  price        Int             // in paise (₹100 = 10000 paise)
+  durationMins Int             // CRITICAL: drives slot blocking computation
+  imageUrl     String?
+  isActive     Boolean         @default(true)
+  displayOrder Int             @default(0)
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  bookingServices BookingService[]
+
+  @@index([shopId, isActive, category])
+  @@map("services")
+}
+
+// ─────────────────────────────────────────────
+// Slot Hold (BookMyShow-style, 90s TTL)
+// ─────────────────────────────────────────────
+
+model SlotHold {
+  id        String     @id @default(uuid())
+  shopId    String
+  shop      Shop       @relation(fields: [shopId], references: [id])
+  staffId   String?
+  staff     StaffMember? @relation(fields: [staffId], references: [id])
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+
+  date      String     // "2026-06-10" — string avoids timezone issues
+  startTime String     // "10:00"
+  endTime   String     // "10:50" — derived from sum of service durations
+
+  // Services that were selected when hold was created (stored as JSON for snapshot)
+  serviceIds String[]
+
+  status    HoldStatus @default(ACTIVE)
+  expiresAt DateTime   // now() + 90 seconds
+
+  createdAt DateTime   @default(now())
+
+  booking   Booking?   // set when CONVERTED
+
+  @@index([shopId, date, startTime, status])
+  @@index([expiresAt, status]) // for cron cleanup query
+  @@map("slot_holds")
+}
+
+// ─────────────────────────────────────────────
+// Bookings
+// ─────────────────────────────────────────────
+
+model Booking {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  shopId    String
+  shop      Shop          @relation(fields: [shopId], references: [id])
+  staffId   String?
+  staff     StaffMember?  @relation(fields: [staffId], references: [id])
+
+  holdId    String?       @unique
+  hold      SlotHold?     @relation(fields: [holdId], references: [id])
+
+  date      String        // "2026-06-10"
+  startTime String        // "10:00"
+  endTime   String        // "10:50"
+
+  status        BookingStatus @default(PENDING)
+  totalAmount   Int           // in paise — snapshot at booking time (cash at shop)
+  notes         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  services      BookingService[]
+
+  @@index([userId, status])
+  @@index([shopId, date, status])
+  @@index([staffId, date])
+  @@map("bookings")
+}
+
+model BookingService {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  // Price snapshot at time of booking
+  pricePaise   Int
+  durationMins Int
+  serviceName  String // snapshot in case service is later deleted
+
+  @@map("booking_services")
+}
+
+// ─────────────────────────────────────────────
+// Reviews
+// ─────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id])
+
+  rating    Int      // 1–5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, shopId]) // one review per shop per user
+  @@index([shopId])
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────
+// Shop Owner Notifications (in-app + email)
+// ─────────────────────────────────────────────
+
+model ShopNotification {
+  id        String    @id @default(uuid())
+  shopId    String
+  shop      Shop      @relation(fields: [shopId], references: [id])
+
+  type      NotifType
+  title     String
+  body      String
+  isRead    Boolean   @default(false)
+
+  // Extra context: bookingId, userId, etc.
+  metadata  Json?
+
+  createdAt DateTime  @default(now())
+
+  @@index([shopId, isRead, createdAt])
+  @@map("shop_notifications")
+}
+
+// ─────────────────────────────────────────────
+// Admin Audit Log
+// ─────────────────────────────────────────────
+
+model AdminLog {
+  id         String   @id @default(uuid())
+  adminId    String   // supabaseId of admin
+  action     String   // "APPROVE_SHOP", "REJECT_SHOP", "SUSPEND_SHOP", etc.
+  targetType String   // "SHOP" | "USER" | "BOOKING"
+  targetId   String
+  shopId     String?
+  shop       Shop?    @relation(fields: [shopId], references: [id])
+  metadata   Json?    // reason, notes, etc.
+  createdAt  DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([adminId])
+  @@map("admin_logs")
+}

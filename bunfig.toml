@@ -1,0 +1,8 @@
+[install]
+# Use bun for all installs
+auto = "fallback"
+
+[install.scopes]
+# all packages in apps/* and packages/* are workspace members
+
+[workspace]
