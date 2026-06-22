@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { Search, Filter, MapPin, Star, Store, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, MapPin, Star, Store, ChevronLeft, ChevronRight, Scissors } from "lucide-react";
 
 interface Shop {
   id: string;
@@ -71,36 +71,51 @@ export default function ExplorePage() {
   const totalPages = Math.max(1, Math.ceil(total / 20));
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      {/* Header bar */}
-      <header className="px-6 py-4 bg-surface-card border-b border-surface-border sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl">✂️</span>
-            <span className="font-display font-bold text-lg">
-              <span className="text-brand-500">Uni</span>Salon
-            </span>
-          </Link>
-          <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Search Partners</span>
-        </div>
+    <div style={{ minHeight: "100vh", backgroundColor: "#ffffff", fontFamily: "'Montserrat', Arial, sans-serif" }}>
+
+      {/* ── HEADER ── */}
+      <header style={{
+        backgroundColor: "#1a1a1a", padding: "0 30px", height: 64,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "sticky", top: 0, zIndex: 50,
+      }}>
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+          <Scissors size={20} color="#ffffff" />
+          <span style={{ fontWeight: 900, fontSize: 18, color: "#ffffff", letterSpacing: "-0.5px" }}>UniSalon</span>
+        </Link>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "1.4px", textTransform: "uppercase", color: "rgba(255,255,255,0.45)" }}>
+          Explore Salons
+        </span>
+        <Link to="/" style={{
+          fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 13, fontWeight: 600,
+          color: "rgba(255,255,255,0.6)", textDecoration: "none",
+        }}>
+          &larr; Home
+        </Link>
       </header>
 
-      {/* Grid container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Side: Filter controls */}
-        <aside className="lg:col-span-1 space-y-6">
-          <div className="card p-5 space-y-5 sticky top-24">
-            <h3 className="font-display font-semibold text-white flex items-center gap-2 text-md">
-              <Filter size={16} className="text-brand-500" /> Filter Salons
-            </h3>
+      {/* ── PAGE BODY ── */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 30px", display: "grid", gridTemplateColumns: "260px 1fr", gap: 32 }}>
 
-            {/* Keyword Search */}
-            <div className="space-y-1.5">
-              <label className="label text-xs">Search Query</label>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        {/* ── SIDEBAR FILTERS ── */}
+        <aside>
+          <div style={{
+            background: "#ffffff", border: "1px solid #e4ebf3",
+            borderRadius: 24, padding: 24, position: "sticky", top: 88,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+              <Filter size={16} color="#111111" />
+              <span style={{ fontWeight: 800, fontSize: 15, color: "#02060c" }}>Filter Salons</span>
+            </div>
+
+            {/* Search */}
+            <div style={{ marginBottom: 20 }}>
+              <label className="label">Keyword</label>
+              <div style={{ position: "relative" }}>
+                <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.3)" }} />
                 <input
-                  className="input pl-8 py-2 text-xs"
+                  className="input"
+                  style={{ paddingLeft: 40, paddingTop: 10, paddingBottom: 10, fontSize: 13 }}
                   placeholder="Salon name or service..."
                   value={search}
                   onChange={handleSearchChange}
@@ -108,118 +123,141 @@ export default function ExplorePage() {
               </div>
             </div>
 
-            {/* Category selection */}
-            <div className="space-y-1.5">
-              <label className="label text-xs">Category</label>
-              <select className="input py-2 text-xs" value={category} onChange={handleCategoryChange}>
+            {/* Category */}
+            <div style={{ marginBottom: 20 }}>
+              <label className="label">Category</label>
+              <select className="input" style={{ paddingTop: 10, paddingBottom: 10, fontSize: 13 }} value={category} onChange={handleCategoryChange}>
                 <option value="ALL">All Categories</option>
                 {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat.replace("_", " ")}
-                  </option>
+                  <option key={cat} value={cat}>{cat.replace(/_/g, " ")}</option>
                 ))}
               </select>
             </div>
 
-            {/* Fallback District selection */}
+            {/* District */}
             {!lat && (
-              <div className="space-y-1.5">
-                <label className="label text-xs">District</label>
-                <select className="input py-2 text-xs" value={district} onChange={handleDistrictChange}>
+              <div style={{ marginBottom: 20 }}>
+                <label className="label">District</label>
+                <select className="input" style={{ paddingTop: 10, paddingBottom: 10, fontSize: 13 }} value={district} onChange={handleDistrictChange}>
                   {districts.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
+                    <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
               </div>
             )}
 
             {lat && lng && (
-              <div className="text-xs bg-brand-500/5 text-brand-400 border border-brand-500/10 p-3 rounded-xl">
-                📍 Showing salons within 15km of your active GPS location.
+              <div style={{
+                background: "#f5f7fa", border: "1px solid #e4ebf3",
+                borderRadius: 12, padding: "10px 14px",
+                fontSize: 12, color: "rgba(2,6,12,0.55)", fontWeight: 600,
+              }}>
+                📍 Showing salons within 15km of your GPS location.
               </div>
             )}
           </div>
         </aside>
 
-        {/* Right Side: Grid of salons */}
-        <section className="lg:col-span-3 space-y-6">
+        {/* ── RESULTS ── */}
+        <section>
+          <div style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#02060c" }}>
+              {total > 0 ? `${total} salons found` : "Explore Salons"}
+            </h1>
+          </div>
+
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
               {[1, 2, 4].map((n) => (
-                <div key={n} className="card h-64 animate-pulse bg-surface-card/40" />
+                <div key={n} style={{ height: 260, borderRadius: 24, background: "#f5f7fa" }} />
               ))}
             </div>
           ) : shops.length === 0 ? (
-            <div className="card p-16 text-center text-gray-500 mt-4">
-              <Store size={40} className="mx-auto text-gray-600 mb-3" />
-              <p className="font-semibold text-white">No matching salons found</p>
-              <p className="text-sm mt-1 max-w-xs mx-auto">Try broadening your search keywords or choosing a different category filter.</p>
+            <div style={{ border: "1.5px dashed #e4ebf3", borderRadius: 24, padding: "64px 32px", textAlign: "center" }}>
+              <Store size={40} style={{ color: "rgba(2,6,12,0.2)", display: "block", margin: "0 auto 12px" }} />
+              <p style={{ fontWeight: 700, fontSize: 16, color: "#02060c" }}>No matching salons found</p>
+              <p style={{ fontSize: 13, color: "rgba(2,6,12,0.45)", marginTop: 6 }}>
+                Try broader keywords or a different category.
+              </p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}>
                 {shops.map((shop) => (
-                  <Link
-                    key={shop.id}
-                    to={`/shop/${shop.slug}`}
-                    className="card group overflow-hidden flex flex-col hover:border-brand-500/30 transition-all hover:-translate-y-0.5 duration-200"
-                  >
-                    <div className="aspect-video relative overflow-hidden bg-surface">
-                      {shop.coverImage ? (
-                        <img src={shop.coverImage} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center font-display font-bold text-gray-700">
-                          ✂️ UniSalon Partner
-                        </div>
-                      )}
-                      <div className="absolute bottom-3 right-3 bg-surface-card/95 border border-surface-border/50 rounded-xl px-2 py-1 flex items-center gap-1 text-xs">
-                        <Star size={11} className="text-yellow-400 fill-current" />
-                        <span className="font-bold text-white">{shop.rating.toFixed(1)}</span>
-                        <span className="text-gray-500 text-[10px]">({shop.totalReviews})</span>
-                      </div>
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-semibold text-white group-hover:text-brand-400 transition-colors">
-                          {shop.name}
-                        </h4>
-                        <span className="text-[10px] bg-brand-500/10 text-brand-400 font-semibold px-2 py-0.5 rounded-full border border-brand-500/20 mt-1 inline-block">
-                          {shop.category}
-                        </span>
-                        {shop.description && (
-                          <p className="text-xs text-gray-500 mt-2.5 leading-relaxed line-clamp-2">{shop.description}</p>
+                  <Link key={shop.id} to={`/shop/${shop.slug}`} style={{ textDecoration: "none" }}>
+                    <div
+                      style={{
+                        background: "#ffffff", border: "1px solid #e4ebf3",
+                        borderRadius: 24, overflow: "hidden", cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 10px 32px rgba(0,0,0,0.09)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                      }}
+                    >
+                      <div style={{ aspectRatio: "16/9", background: "#f5f7fa", position: "relative", overflow: "hidden" }}>
+                        {shop.coverImage ? (
+                          <img src={shop.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "rgba(2,6,12,0.25)" }}>
+                            ✂️ UniSalon Partner
+                          </div>
                         )}
+                        <div style={{
+                          position: "absolute", bottom: 10, right: 10,
+                          background: "rgba(255,255,255,0.95)", borderRadius: 100,
+                          padding: "3px 10px", display: "flex", alignItems: "center", gap: 4,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                        }}>
+                          <Star size={11} style={{ color: "#f59e0b", fill: "#f59e0b" }} />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#02060c" }}>{shop.rating.toFixed(1)}</span>
+                          <span style={{ fontSize: 11, color: "rgba(2,6,12,0.4)" }}>({shop.totalReviews})</span>
+                        </div>
                       </div>
-
-                      <div className="mt-4 pt-3 border-t border-surface-border flex items-center gap-1.5 text-xs text-gray-400">
-                        <MapPin size={12} className="text-gray-500" />
-                        <span className="truncate">{shop.city}, {shop.district}</span>
+                      <div style={{ padding: "16px 18px 18px" }}>
+                        <h4 style={{ fontWeight: 700, fontSize: 15, color: "#02060c", marginBottom: 6 }}>{shop.name}</h4>
+                        <span className="tag" style={{ marginBottom: 8, display: "inline-block" }}>{shop.category.replace(/_/g, " ")}</span>
+                        {shop.description && (
+                          <p style={{
+                            fontSize: 12, color: "rgba(2,6,12,0.5)", lineHeight: 1.5,
+                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                            marginBottom: 10,
+                          }}>
+                            {shop.description}
+                          </p>
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, borderTop: "1px solid #e4ebf3", paddingTop: 10 }}>
+                          <MapPin size={12} style={{ color: "rgba(2,6,12,0.3)", flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: "rgba(2,6,12,0.45)", fontWeight: 500 }}>{shop.city}, {shop.district}</span>
+                        </div>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
 
-              {/* Pagination control */}
+              {/* Pagination */}
               {total > 20 && (
-                <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-surface-border">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 40, paddingTop: 24, borderTop: "1px solid #e4ebf3" }}>
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="btn-outline py-1.5 px-3 flex items-center gap-1 text-xs disabled:opacity-40"
+                    className="btn-outline"
+                    style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 4, opacity: page === 1 ? 0.4 : 1 }}
                   >
                     <ChevronLeft size={14} /> Prev
                   </button>
-                  <span className="text-xs text-gray-400">
-                    Page {page} of {totalPages}
-                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(2,6,12,0.5)" }}>Page {page} of {totalPages}</span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="btn-outline py-1.5 px-3 flex items-center gap-1 text-xs disabled:opacity-40"
+                    className="btn-outline"
+                    style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 4, opacity: page === totalPages ? 0.4 : 1 }}
                   >
                     Next <ChevronRight size={14} />
                   </button>
@@ -228,7 +266,7 @@ export default function ExplorePage() {
             </>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

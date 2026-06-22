@@ -1,15 +1,15 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ShieldCheck, ClipboardList, Users, ShieldAlert, LogOut,
+  LayoutDashboard, ShieldCheck, ClipboardList, Users, ShieldAlert, LogOut, Scissors,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 
 const links = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/approvals", icon: ShieldCheck, label: "Approvals" },
-  { to: "/shops", icon: ClipboardList, label: "Shops" },
-  { to: "/users", icon: Users, label: "Users" },
-  { to: "/logs", icon: ShieldAlert, label: "Admin Logs" },
+  { to: "/approvals", icon: ShieldCheck,    label: "Approvals" },
+  { to: "/shops",     icon: ClipboardList,  label: "Shops" },
+  { to: "/users",     icon: Users,          label: "Users" },
+  { to: "/logs",      icon: ShieldAlert,    label: "Admin Logs" },
 ];
 
 interface PageHeaderProps {
@@ -20,14 +20,14 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">{title}</h1>
-        {subtitle && <p className="text-gray-400 text-sm mt-1">{subtitle}</p>}
+        <h1 style={{ fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 26, fontWeight: 900, color: "#02060c", letterSpacing: "-0.5px" }}>
+          {title}
+        </h1>
+        {subtitle && <p style={{ fontSize: 13, color: "rgba(2,6,12,0.45)", fontWeight: 600, marginTop: 4 }}>{subtitle}</p>}
       </div>
-      <div className="flex items-center gap-3">
-        {actions}
-      </div>
+      {actions && <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{actions}</div>}
     </div>
   );
 }
@@ -42,30 +42,36 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      <aside className="w-64 min-h-screen bg-surface-card border-r border-surface-border flex flex-col shrink-0">
-        {/* Brand logo */}
-        <div className="px-6 py-5 border-b border-surface-border">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">✂️</span>
-            <span className="font-display font-bold text-lg">
-              <span className="text-brand-500">Uni</span>Salon
-            </span>
-            <span className="text-xs bg-brand-500/10 text-brand-400 font-semibold px-2 py-0.5 rounded-full ml-1">
-              Admin
-            </span>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "'Montserrat', Arial, sans-serif" }}>
+      {/* Sidebar */}
+      <aside style={{ width: 256, minHeight: "100vh", background: "#ffffff", borderRight: "1px solid #e4ebf3", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        {/* Brand */}
+        <div style={{ padding: "24px 20px", borderBottom: "1px solid #e4ebf3" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#111111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Scissors size={18} color="#ffffff" />
+            </div>
+            <div>
+              <span style={{ fontWeight: 900, fontSize: 16, color: "#02060c" }}>UniSalon</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.5px",
+                background: "#111111", color: "#ffffff",
+                borderRadius: 6, padding: "2px 7px", marginLeft: 6,
+              }}>
+                ADMIN
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar Nav */}
-        <nav className="flex-1 p-3 space-y-0.5">
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "12px" }}>
           {links.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) =>
-                `sidebar-link${isActive ? " active" : ""}`
-              }
+              style={{ textDecoration: "none", display: "block", marginBottom: 2 }}
+              className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
             >
               <Icon size={16} />
               <span>{label}</span>
@@ -73,28 +79,25 @@ export function AdminLayout() {
           ))}
         </nav>
 
-        {/* Admin user context & Log out */}
-        <div className="p-3 border-t border-surface-border">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-surface">
-            <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 text-sm font-bold shrink-0">
+        {/* User footer */}
+        <div style={{ padding: "12px", borderTop: "1px solid #e4ebf3" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 14, background: "#f5f7fa" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#111111", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
               {user?.email?.[0]?.toUpperCase() ?? "A"}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.email}</p>
-              <p className="text-xs text-gray-500">Administrator</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#02060c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
+              <p style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600 }}>Administrator</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="text-gray-500 hover:text-red-400 transition-colors shrink-0"
-              title="Sign out"
-            >
+            <button onClick={handleSignOut} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.35)", padding: 4, flexShrink: 0 }} title="Sign out">
               <LogOut size={15} />
             </button>
           </div>
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">
+      {/* Main content */}
+      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         <Outlet />
       </main>
     </div>

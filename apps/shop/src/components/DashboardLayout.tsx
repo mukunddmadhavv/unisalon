@@ -10,12 +10,21 @@ interface DashboardLayoutProps {
 
 export function PageHeader({ title, subtitle, actions }: DashboardLayoutProps) {
   return (
-    <div className="flex items-start justify-between mb-6">
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">{title}</h1>
-        {subtitle && <p className="text-gray-400 text-sm mt-1">{subtitle}</p>}
+        <h1 style={{
+          fontFamily: "'Montserrat', Arial, sans-serif",
+          fontSize: 26, fontWeight: 900, color: "#02060c", letterSpacing: "-0.5px",
+        }}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p style={{ fontSize: 13, color: "rgba(2,6,12,0.45)", fontWeight: 600, marginTop: 4 }}>
+            {subtitle}
+          </p>
+        )}
       </div>
-      <div className="flex items-center gap-3">
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {actions}
         <NotificationBell />
       </div>
@@ -25,9 +34,12 @@ export function PageHeader({ title, subtitle, actions }: DashboardLayoutProps) {
 
 export function DashboardLayout() {
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div style={{
+      display: "flex", minHeight: "100vh",
+      background: "#f5f7fa", fontFamily: "'Montserrat', Arial, sans-serif",
+    }}>
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         <Outlet />
       </main>
     </div>

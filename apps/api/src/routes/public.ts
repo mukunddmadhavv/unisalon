@@ -122,7 +122,7 @@ export const publicRoutes = new Elysia({ prefix: "/api" })
 
   // ── Slot availability (computed, service-duration-aware) ───────────
   .get(
-    "/shops/:shopId/slots",
+    "/shops/:slug/slots",
     async ({ params, query, set }) => {
       const { date, serviceIds } = query;
       if (!date || !serviceIds) {
@@ -136,7 +136,7 @@ export const publicRoutes = new Elysia({ prefix: "/api" })
         return { success: false, error: "At least one serviceId is required" };
       }
 
-      const availability = await computeAvailableSlots(params.shopId, date, ids);
+      const availability = await computeAvailableSlots(params.slug, date, ids);
       return { success: true, data: availability };
     },
     {

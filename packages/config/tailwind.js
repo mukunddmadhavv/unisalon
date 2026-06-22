@@ -5,40 +5,46 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50:  '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316',  // primary orange (UniSalon brand)
-          600: '#ea6f10',
-          700: '#c2560d',
-          800: '#9a3f0b',
-          900: '#7c3209',
-          950: '#431704',
+          50:  '#f5f5f5',
+          100: '#ebebeb',
+          200: '#d6d6d6',
+          300: '#b0b0b0',
+          400: '#6e6e6e',
+          500: '#111111',  // primary black (UniSalon brand accent)
+          600: '#0a0a0a',
+          700: '#080808',
+          800: '#050505',
+          900: '#020202',
+          950: '#000000',
         },
         surface: {
-          DEFAULT: '#0f0f0f',
-          card: '#1a1a1a',
-          border: '#2a2a2a',
-          muted: '#3a3a3a',
+          DEFAULT: '#ffffff',
+          card:    '#f5f7fa',
+          border:  '#e4ebf3',
+          muted:   '#d0d7e2',
+          dark:    '#1a1a1a',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans:    ['Montserrat', 'Arial', 'sans-serif'],
+        display: ['Montserrat', 'Arial', 'sans-serif'],
+      },
+      borderRadius: {
+        '2xl': '16px',
+        '3xl': '24px',
+        '4xl': '32px',
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-in-out',
-        'slide-up': 'slideUp 0.4s ease-out',
+        'fade-in':    'fadeIn 0.3s ease-in-out',
+        'slide-up':   'slideUp 0.4s ease-out',
         'pulse-hold': 'pulseHold 1.5s ease-in-out infinite',
       },
       keyframes: {
-        fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
-        slideUp: { from: { transform: 'translateY(12px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+        fadeIn:    { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp:   { from: { transform: 'translateY(12px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
         pulseHold: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(249,115,22,0.4)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(249,115,22,0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(17,17,17,0.3)' },
+          '50%':      { boxShadow: '0 0 0 8px rgba(17,17,17,0)' },
         }
       },
     },

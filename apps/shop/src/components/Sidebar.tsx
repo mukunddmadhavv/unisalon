@@ -1,18 +1,18 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Scissors, Users, CalendarCheck,
-  Star, LogOut,
+  Star, LogOut, Settings,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useNotifications } from "../hooks/useNotifications";
 
 const links = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/shop/edit", icon: Scissors, label: "My Shop" },
-  { to: "/services", icon: Scissors, label: "Services" },
-  { to: "/staff", icon: Users, label: "Staff" },
-  { to: "/bookings", icon: CalendarCheck, label: "Bookings" },
-  { to: "/reviews", icon: Star, label: "Reviews" },
+  { to: "/shop/edit",  icon: Settings,        label: "My Shop" },
+  { to: "/services",   icon: Scissors,        label: "Services" },
+  { to: "/staff",      icon: Users,           label: "Staff" },
+  { to: "/bookings",   icon: CalendarCheck,   label: "Bookings" },
+  { to: "/reviews",    icon: Star,            label: "Reviews" },
 ];
 
 export function Sidebar() {
@@ -26,32 +26,44 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-surface-card border-r border-surface-border flex flex-col">
+    <aside style={{
+      width: 256, minHeight: "100vh",
+      background: "#ffffff", borderRight: "1px solid #e4ebf3",
+      display: "flex", flexDirection: "column",
+      fontFamily: "'Montserrat', Arial, sans-serif",
+    }}>
       {/* Brand */}
-      <div className="px-6 py-5 border-b border-surface-border">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">✂️</span>
-          <span className="font-display font-bold text-lg">
-            <span className="text-brand-500">Uni</span>Salon
-          </span>
-          <span className="text-xs text-gray-500 ml-1">Shop</span>
+      <div style={{ padding: "24px 20px", borderBottom: "1px solid #e4ebf3" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "#111111", display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Scissors size={18} color="#ffffff" />
+          </div>
+          <div>
+            <span style={{ fontWeight: 900, fontSize: 16, color: "#02060c", letterSpacing: "-0.3px" }}>UniSalon</span>
+            <span style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600, marginLeft: 6 }}>Shop</span>
+          </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-3 space-y-0.5">
+      <nav style={{ flex: 1, padding: "12px 12px" }}>
         {links.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
-            className={({ isActive }) =>
-              `sidebar-link${isActive ? " active" : ""}`
-            }
+            style={{ textDecoration: "none", display: "block", marginBottom: 2 }}
+            className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
           >
             <Icon size={16} />
             <span>{label}</span>
             {label === "Bookings" && unreadCount > 0 && (
-              <span className="ml-auto bg-brand-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+              <span style={{
+                marginLeft: "auto", background: "#111111", color: "#ffffff",
+                fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 100,
+              }}>
                 {unreadCount}
               </span>
             )}
@@ -60,18 +72,29 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="p-3 border-t border-surface-border">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-surface">
-          <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 text-sm font-bold">
+      <div style={{ padding: "12px", borderTop: "1px solid #e4ebf3" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "10px 12px", borderRadius: 14,
+          background: "#f5f7fa",
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: "#111111", color: "#ffffff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 800, fontSize: 14,
+          }}>
             {user?.email?.[0]?.toUpperCase() ?? "O"}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.email}</p>
-            <p className="text-xs text-gray-500">Shop Owner</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#02060c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {user?.email}
+            </p>
+            <p style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600 }}>Shop Owner</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="text-gray-500 hover:text-red-400 transition-colors"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.35)", padding: 4 }}
             title="Sign out"
           >
             <LogOut size={15} />

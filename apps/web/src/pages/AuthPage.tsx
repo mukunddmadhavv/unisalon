@@ -2,10 +2,16 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authStore";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Scissors } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Mode = "login" | "signup";
+
+const FEATURES = [
+  { icon: "📅", title: "Instant Confirmations", desc: "Lock your slot in seconds — no waiting queues" },
+  { icon: "💵", title: "Pay At Shop", desc: "No online payment. Pay cash at the counter." },
+  { icon: "⭐", title: "Verified Stylists", desc: "Check community ratings before you book." },
+];
 
 export default function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
@@ -26,13 +32,7 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: {
-              name,
-              phone: phone || undefined,
-              role: "CUSTOMER",
-            },
-          },
+          options: { data: { name, phone: phone || undefined, role: "CUSTOMER" } },
         });
         if (error) throw error;
         toast.success("Account created! Check your email to confirm.");
@@ -51,62 +51,80 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex">
-      {/* Left panel - branding details */}
-      <div className="hidden lg:flex lg:w-1/2 bg-surface-card border-r border-surface-border flex-col justify-between p-12">
-        <div>
-          <div className="flex items-center gap-2 mb-16">
-            <span className="text-3xl">✂️</span>
-            <span className="font-display font-bold text-2xl">
-              <span className="text-brand-500">Uni</span>Salon
-            </span>
-          </div>
-          <h1 className="font-display text-4xl font-bold text-white leading-tight mb-4">
-            Discover & Book Salons<br />
-            <span className="text-brand-500">across India</span>
-          </h1>
-          <p className="text-gray-400 text-lg leading-relaxed">
-            Reserve time slots on-the-fly, review salon partners, and schedule bookings with your preferred stylist barber in seconds.
-          </p>
+    <div style={{ minHeight: "100vh", display: "flex", fontFamily: "'Montserrat', Arial, sans-serif" }}>
+
+      {/* Left panel — dark branding */}
+      <div className="section-dark" style={{
+        width: "45%", flexShrink: 0,
+        padding: "48px 56px",
+        display: "flex", flexDirection: "column", justifyContent: "space-between",
+        borderBottomRightRadius: 0,
+      }}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Scissors size={22} color="#ffffff" />
+          <span style={{ fontWeight: 900, fontSize: 22, color: "#ffffff", letterSpacing: "-0.5px" }}>UniSalon</span>
         </div>
 
-        <div className="space-y-4">
-          {[
-            { icon: "📅", title: "Immediate Confirmations", desc: "No more waiting queues, lock your spot instantly" },
-            { icon: "💵", title: "Pay At Shop", desc: "No online payment required. Pay cash at the counter after services" },
-            { icon: "⭐", title: "Stylist Ratings", desc: "Check community reviews before scheduling" },
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-start gap-3 p-4 bg-surface rounded-xl border border-surface-border">
-              <span className="text-2xl mt-0.5">{item.icon}</span>
-              <div>
-                <p className="font-medium text-white text-sm">{item.title}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{item.desc}</p>
+        {/* Headline */}
+        <div>
+          <h1 style={{
+            fontFamily: "'Montserrat', Arial, sans-serif",
+            fontSize: "clamp(2.2rem, 3.5vw, 3.2rem)",
+            fontWeight: 900, lineHeight: "1em",
+            letterSpacing: "-1px", color: "#ffffff",
+            textTransform: "capitalize", marginBottom: 20,
+          }}>
+            Hair done.<br />
+            <span style={{ color: "rgba(255,255,255,0.4)" }}>Price right.</span>
+          </h1>
+          <p style={{ fontSize: 15, fontWeight: 500, lineHeight: "1.6", color: "rgba(255,255,255,0.6)", marginBottom: 40 }}>
+            India's salon discovery and booking platform. Reserve time slots on-the-fly, pick your stylist, skip the queue.
+          </p>
+
+          {/* Feature list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {FEATURES.map((f, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: 14,
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 16, padding: "14px 18px",
+              }}>
+                <span style={{ fontSize: 22, lineHeight: 1 }}>{f.icon}</span>
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: 14, color: "#ffffff", marginBottom: 3 }}>{f.title}</p>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>{f.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
+          © {new Date().getFullYear()} UniSalon Inc.
+        </p>
       </div>
 
-      {/* Right panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <span className="text-2xl">✂️</span>
-            <span className="font-display font-bold text-xl">
-              <span className="text-brand-500">Uni</span>Salon
-            </span>
+      {/* Right panel — form */}
+      <div style={{
+        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "48px 40px", background: "#f5f7fa",
+      }}>
+        <div style={{ width: "100%", maxWidth: 420 }}>
+          {/* Mobile logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 36 }}>
+            <Scissors size={18} color="#02060c" />
+            <span style={{ fontWeight: 900, fontSize: 18, color: "#02060c" }}>UniSalon</span>
           </div>
 
-          <h2 className="font-display text-3xl font-bold text-white mb-2">
-            {mode === "login" ? "Welcome back" : "Create Account"}
+          <h2 style={{ fontSize: 28, fontWeight: 900, color: "#02060c", letterSpacing: "-0.5px", marginBottom: 8 }}>
+            {mode === "login" ? "Welcome back" : "Create account"}
           </h2>
-          <p className="text-gray-400 mb-8">
-            {mode === "login"
-              ? "Sign in to book slot reservations"
-              : "Register to track your booking histories"}
+          <p style={{ fontSize: 14, fontWeight: 500, color: "rgba(2,6,12,0.5)", marginBottom: 32 }}>
+            {mode === "login" ? "Sign in to book your salon slot" : "Register to manage your bookings"}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "signup" && (
               <>
                 <div>
@@ -114,7 +132,7 @@ export default function AuthPage() {
                   <input className="input" placeholder="Rajesh Kumar" value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
                 <div>
-                  <label className="label">Phone Number (Optional)</label>
+                  <label className="label">Phone (Optional)</label>
                   <input className="input" placeholder="9876543210" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
               </>
@@ -122,38 +140,45 @@ export default function AuthPage() {
 
             <div>
               <label className="label">Email Address</label>
-              <div className="relative">
-                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input className="input pl-9" placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <div style={{ position: "relative" }}>
+                <Mail size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.3)" }} />
+                <input className="input" style={{ paddingLeft: 42 }} placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
             </div>
 
             <div>
               <label className="label">Password</label>
-              <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input className="input pl-9 pr-10" placeholder="••••••••" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+              <div style={{ position: "relative" }}>
+                <Lock size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.3)" }} />
+                <input
+                  className="input" style={{ paddingLeft: 42, paddingRight: 44 }}
+                  placeholder="••••••••" type={showPw ? "text" : "password"}
+                  value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                />
+                <button type="button" onClick={() => setShowPw(!showPw)} style={{
+                  position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.35)",
+                }}>
                   {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 flex items-center justify-center gap-2">
-              {loading ? (
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : null}
-              {mode === "login" ? "Sign In" : "Register"}
+            <button type="submit" disabled={loading} className="btn-primary" style={{ width: "100%", marginTop: 8, padding: "14px 28px", fontSize: 15 }}>
+              {loading && (
+                <span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#ffffff", borderRadius: "50%", display: "inline-block", marginRight: 8 }} />
+              )}
+              {mode === "login" ? "Sign In" : "Create Account"}
             </button>
           </form>
 
-          <p className="text-center text-gray-500 text-sm mt-6">
-            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+          <p style={{ textAlign: "center", fontSize: 13, color: "rgba(2,6,12,0.5)", fontWeight: 500, marginTop: 24 }}>
+            {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="text-brand-400 hover:text-brand-300 font-medium"
+              style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 800, fontSize: 13, color: "#111111", textDecoration: "underline" }}
             >
-              {mode === "login" ? "Register one" : "Sign in"}
+              {mode === "login" ? "Register" : "Sign in"}
             </button>
           </p>
         </div>
