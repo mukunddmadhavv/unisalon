@@ -4,7 +4,7 @@
 
 ## Stack
 
-- **Runtime**: Bun
+- **Runtime**: Bun  
 - **Monorepo**: Turborepo + Bun Workspaces
 - **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS v3
 - **Backend**: Bun + Elysia
