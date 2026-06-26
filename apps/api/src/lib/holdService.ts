@@ -33,6 +33,12 @@ export async function createSlotHold(params: {
 }) {
   const { shopId, staffId, date, startTime, endTime, serviceIds, userId } = params;
 
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: userId },
+    select: { id: true },
+  });
+  if (!dbUser) throw new Error("User not found");
+
   // Check for conflicting ACTIVE holds or confirmed bookings
   const [conflictHold, conflictBooking] = await Promise.all([
     prisma.slotHold.findFirst({
@@ -65,7 +71,7 @@ export async function createSlotHold(params: {
 
   // Release any previous ACTIVE holds by this user for the same shop+date
   await prisma.slotHold.updateMany({
-    where: { userId, shopId, date, status: "ACTIVE" },
+    where: { userId: dbUser.id, shopId, date, status: "ACTIVE" },
     data: { status: "RELEASED" },
   });
 
@@ -75,7 +81,7 @@ export async function createSlotHold(params: {
     data: {
       shopId, staffId: staffId ?? null,
       date, startTime, endTime,
-      serviceIds, userId,
+      serviceIds, userId: dbUser.id,
       status: "ACTIVE",
       expiresAt,
     },
@@ -96,8 +102,14 @@ export async function createSlotHold(params: {
 // ─────────────────────────────────────────────
 
 export async function releaseSlotHold(holdId: string, userId: string) {
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: userId },
+    select: { id: true },
+  });
+  if (!dbUser) throw new Error("User not found");
+
   const hold = await prisma.slotHold.findUnique({ where: { id: holdId } });
-  if (!hold || hold.userId !== userId || hold.status !== "ACTIVE") {
+  if (!hold || hold.userId !== dbUser.id || hold.status !== "ACTIVE") {
     throw new Error("Hold not found or already expired");
   }
 
@@ -131,7 +143,15 @@ export async function convertHoldToBooking(params: {
     // 1. Lock and verify hold
     const hold = await tx.slotHold.findUnique({ where: { id: holdId } });
     if (!hold) throw new Error("Hold not found");
-    if (hold.userId !== userId) throw new Error("Unauthorized");
+
+    // Resolve user DB id
+    const user = await tx.user.findUnique({
+      where: { supabaseId: userId },
+      select: { id: true },
+    });
+    if (!user) throw new Error("User not found");
+
+    if (hold.userId !== user.id) throw new Error("Unauthorized");
     if (hold.status !== "ACTIVE") throw new Error("HOLD_EXPIRED");
     if (hold.expiresAt < new Date()) {
       await tx.slotHold.update({ where: { id: holdId }, data: { status: "EXPIRED" } });
@@ -156,13 +176,6 @@ export async function convertHoldToBooking(params: {
       select: { id: true, name: true, price: true, durationMins: true },
     });
     const totalAmount = services.reduce((sum, s) => sum + s.price, 0);
-
-    // 4. Get user DB id
-    const user = await tx.user.findUnique({
-      where: { supabaseId: userId },
-      select: { id: true },
-    });
-    if (!user) throw new Error("User not found");
 
     // 5. Create booking
     const booking = await tx.booking.create({

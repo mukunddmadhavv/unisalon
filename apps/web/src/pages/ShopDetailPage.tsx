@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { Clock, IndianRupee, Star, CheckCircle2, MapPin, Scissors } from "lucide-react";
 import { format, addDays } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -48,6 +47,7 @@ export default function ShopDetailPage() {
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [activeDateIndex, setActiveDateIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
   const { data: shop, isLoading, error } = useQuery<ShopDetail>({
     queryKey: ["shop-detail", slug],
@@ -59,10 +59,7 @@ export default function ShopDetailPage() {
   const { data: slots = [], isFetching: isSlotsLoading } = useQuery<string[]>({
     queryKey: ["shop-slots", shop?.id, selectedDate, serviceIdsQueryParam, selectedStaff],
     queryFn: async () => {
-      const res = await api.getShopSlots(shop!.id, {
-        date: selectedDate,
-        serviceIds: serviceIdsQueryParam,
-      });
+      const res = await api.getShopSlots(shop!.id, { date: selectedDate, serviceIds: serviceIdsQueryParam });
       const availableSlots = res.filter((s: any) => {
         if (!s.available) return false;
         if (selectedStaff && s.staffId !== selectedStaff) return false;
@@ -112,315 +109,294 @@ export default function ShopDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid #e4ebf3", borderTopColor: "#111111", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-9 h-9 border-3 border-border-light border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error || !shop) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 48, maxWidth: 400, textAlign: "center" }}>
-          <p style={{ fontWeight: 800, fontSize: 18, color: "#02060c", marginBottom: 8 }}>Salon Not Found</p>
-          <p style={{ fontSize: 14, color: "rgba(2,6,12,0.5)", marginBottom: 24 }}>
-            This salon does not exist or has been suspended.
-          </p>
-          <Link to="/" className="btn-primary">← Back to Discovery</Link>
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="bg-white border border-border-light rounded-2xl p-10 max-w-sm text-center shadow-md">
+          <p className="font-bold text-xl text-primary mb-2">Salon Not Found</p>
+          <p className="text-text-secondary text-sm mb-6">This salon does not exist or has been suspended.</p>
+          <Link to="/" className="btn-primary w-full justify-center">
+            ← Back to Discovery
+          </Link>
         </div>
       </div>
     );
   }
 
-  const totalCost = shop.services.filter((s) => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
-  const totalDuration = shop.services.filter((s) => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.durationMins, 0);
+  const totalCost = shop.services
+    .filter((s) => selectedServices.includes(s.id))
+    .reduce((sum, s) => sum + s.price, 0);
+  const totalDuration = shop.services
+    .filter((s) => selectedServices.includes(s.id))
+    .reduce((sum, s) => sum + s.durationMins, 0);
+
+  // Group services by category
+  const categoriesList = ["ALL", ...Array.from(new Set(shop.services.map((s) => s.category)))];
+
+  const filteredServices =
+    activeCategory === "ALL"
+      ? shop.services
+      : shop.services.filter((s) => s.category === activeCategory);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#ffffff", fontFamily: "'Montserrat', Arial, sans-serif", paddingBottom: selectedServices.length > 0 ? 100 : 0 }}>
+    <div className="min-h-screen bg-white pb-28 font-body-md text-text-primary">
+      
+      {/* ── TOP NAV BAR ── */}
+      <header className="sticky top-0 z-50 bg-white px-5 py-4 flex items-center justify-between border-b border-border-light max-w-4xl mx-auto">
+        <button onClick={() => window.history.back()} className="flex items-center hover:opacity-85">
+          <span className="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+        </button>
+        <span className="font-display font-black text-lg tracking-tight text-primary">Partner Salon Menu</span>
+        <div className="flex gap-4">
+          <span className="material-symbols-outlined text-primary cursor-pointer hover:scale-105 transition-transform">favorite</span>
+          <span className="material-symbols-outlined text-primary cursor-pointer hover:scale-105 transition-transform">share</span>
+        </div>
+      </header>
 
-      {/* Cover Image */}
-      <div style={{ height: 320, position: "relative", background: "#f5f7fa", overflow: "hidden" }}>
-        {shop.coverImage ? (
-          <img src={shop.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />
-        ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64 }}>🏪</div>
-        )}
-        {/* Gradient overlay */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #ffffff 0%, transparent 60%)" }} />
-        {/* Back button */}
-        <Link to="/" style={{
-          position: "absolute", top: 24, left: 24, textDecoration: "none",
-          display: "flex", alignItems: "center", gap: 6,
-          background: "rgba(255,255,255,0.92)", border: "1px solid #e4ebf3",
-          borderRadius: 100, padding: "8px 16px",
-          fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 13, fontWeight: 700, color: "#02060c",
-          backdropFilter: "blur(8px)",
-        }}>
-          <Scissors size={14} /> UniSalon
-        </Link>
-      </div>
-
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 30px" }}>
-        {/* Shop Info Card */}
-        <div style={{
-          background: "#ffffff", border: "1px solid #e4ebf3", borderRadius: 24,
-          padding: "28px 32px", marginTop: -80, position: "relative", zIndex: 10,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+      {/* ── MAIN LAYOUT CONTAINER ── */}
+      <main className="max-w-4xl mx-auto mt-4 px-5">
+        
+        {/* Salon Header Card (Swiggy Style) */}
+        <section className="bg-white p-5 rounded-xl swiggy-shadow border border-border-light">
+          <div className="flex justify-between items-start gap-4">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 900, color: "#02060c", letterSpacing: "-0.5px" }}>{shop.name}</h1>
-                <span className="tag tag-dark">{shop.category}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(2,6,12,0.5)", fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
-                <MapPin size={13} />
+              <h1 className="font-headline-lg text-2xl font-black text-primary mb-1.5">{shop.name}</h1>
+              <p className="text-xs text-text-secondary font-medium mb-3">
                 {shop.address}, {shop.city}, {shop.district}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  background: "#fef9e7", border: "1px solid #fde68a", borderRadius: 100, padding: "5px 12px",
-                }}>
-                  <Star size={13} style={{ color: "#f59e0b", fill: "#f59e0b" }} />
-                  <span style={{ fontWeight: 800, fontSize: 13, color: "#92400e" }}>{shop.rating.toFixed(1)}</span>
-                </div>
-                <span style={{ fontSize: 13, color: "rgba(2,6,12,0.45)", fontWeight: 600 }}>{shop.totalReviews} reviews</span>
-                <span style={{ fontSize: 13, color: "rgba(2,6,12,0.45)" }}>·</span>
-                <span style={{ fontSize: 13, color: "rgba(2,6,12,0.55)", fontWeight: 600 }}>
-                  🕐 {shop.openTime} – {shop.closeTime}
-                </span>
-              </div>
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-0.5 bg-rating-green text-white font-bold text-xs px-2 py-1 rounded">
+              {shop.rating.toFixed(1)} <span className="material-symbols-outlined !text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            </span>
+          </div>
+
+          <div className="dashed-divider my-3"></div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-lg">schedule</span>
+              <span className="text-xs font-bold text-primary">{shop.openTime} – {shop.closeTime}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-lg">currency_rupee</span>
+              <span className="text-xs font-bold text-primary uppercase tracking-wide">{shop.category} Menu</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Main grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, marginTop: 24 }}>
+        {/* Category Tabs (Horizontal Scroll) */}
+        <section className="mt-6 border-b border-border-light">
+          <div className="flex overflow-x-auto no-scrollbar gap-6 pb-2.5">
+            {categoriesList.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`whitespace-nowrap text-sm font-bold pb-1 transition-all ${
+                  activeCategory === cat
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-text-secondary hover:text-primary"
+                }`}
+              >
+                {cat === "ALL" ? "All Services" : cat.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
+        </section>
 
-          {/* Left: Services + Staff */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Services */}
-            <div style={{ background: "#ffffff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 28 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: "#02060c", marginBottom: 20 }}>Select Services</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                {shop.services.map((svc, idx) => {
-                  const isSelected = selectedServices.includes(svc.id);
-                  return (
-                    <div
-                      key={svc.id}
-                      onClick={() => toggleService(svc.id)}
-                      style={{
-                        display: "flex", alignItems: "flex-start", gap: 16,
-                        padding: "18px 0",
-                        borderTop: idx === 0 ? "none" : "1px solid #f0f0f0",
-                        cursor: "pointer",
-                        borderRadius: 4,
-                      }}
-                    >
-                      {/* Checkbox */}
-                      <div style={{
-                        width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 2,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: isSelected ? "#111111" : "#ffffff",
-                        border: isSelected ? "2px solid #111111" : "2px solid #d0d0d0",
-                        transition: "all 0.15s ease",
-                      }}>
-                        {isSelected && <CheckCircle2 size={13} color="#ffffff" fill="#ffffff" />}
-                      </div>
+        {/* ── MENUS & TIME SLOT CHOOSER (GRID LAYOUT) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+          
+          {/* Services Menu (Left Column) */}
+          <div className="lg:col-span-7 flex flex-col gap-1">
+            <h2 className="font-headline-md text-base text-text-primary mb-2">
+              {activeCategory === "ALL" ? "Menu Items" : activeCategory.replace(/_/g, " ")} ({filteredServices.length})
+            </h2>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <h4 style={{ fontWeight: 700, fontSize: 15, color: isSelected ? "#111111" : "#02060c" }}>{svc.name}</h4>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, fontWeight: 800, fontSize: 15, color: "#02060c" }}>
-                            <IndianRupee size={13} />
-                            {(svc.price / 100).toFixed(0)}
-                          </div>
-                        </div>
-                        {svc.description && (
-                          <p style={{ fontSize: 13, color: "rgba(2,6,12,0.5)", marginTop: 4, lineHeight: 1.5 }}>{svc.description}</p>
-                        )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6, color: "rgba(2,6,12,0.4)", fontSize: 12, fontWeight: 600 }}>
-                          <Clock size={11} /> {svc.durationMins} mins
-                        </div>
-                      </div>
+            {filteredServices.map((svc) => {
+              const isSelected = selectedServices.includes(svc.id);
+              return (
+                <div
+                  key={svc.id}
+                  className="py-6 border-b border-border-light flex gap-4 items-start justify-between bg-white"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="material-symbols-outlined text-rating-green text-sm">stars</span>
+                      <span className="text-[9px] text-offer-text font-black uppercase tracking-wider">Bestseller</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Staff */}
-            {shop.staff.length > 0 && (
-              <div style={{ background: "#ffffff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 28 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: "#02060c", marginBottom: 20 }}>Choose Stylist <span style={{ fontWeight: 500, fontSize: 14, color: "rgba(2,6,12,0.4)" }}>(optional)</span></h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12 }}>
-                  {/* Any */}
-                  <div
-                    onClick={() => setSelectedStaff(null)}
-                    style={{
-                      background: selectedStaff === null ? "#111111" : "#f5f7fa",
-                      border: "1px solid",
-                      borderColor: selectedStaff === null ? "#111111" : "#e4ebf3",
-                      borderRadius: 16, padding: "16px 12px", textAlign: "center", cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <div style={{
-                      width: 40, height: 40, borderRadius: "50%",
-                      background: selectedStaff === null ? "rgba(255,255,255,0.15)" : "#e4ebf3",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 8px", fontSize: 18,
-                    }}>⭐</div>
-                    <p style={{ fontWeight: 700, fontSize: 12, color: selectedStaff === null ? "#ffffff" : "#02060c" }}>Any Available</p>
-                    <p style={{ fontSize: 11, color: selectedStaff === null ? "rgba(255,255,255,0.6)" : "rgba(2,6,12,0.4)", marginTop: 2 }}>Quickest</p>
+                    <h3 className="text-sm font-bold text-primary mb-1 truncate">{svc.name}</h3>
+                    <p className="text-sm font-black text-primary mb-2">₹{(svc.price / 100).toFixed(0)}</p>
+                    {svc.description && (
+                      <p className="text-xs text-text-secondary leading-relaxed line-clamp-2 pr-2">
+                        {svc.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-2.5 text-text-secondary text-[11px] font-bold">
+                      <span className="material-symbols-outlined text-sm">schedule</span>
+                      <span>{svc.durationMins} mins</span>
+                    </div>
                   </div>
 
-                  {shop.staff.map((member) => (
-                    <div
-                      key={member.id}
-                      onClick={() => setSelectedStaff(member.id)}
-                      style={{
-                        background: selectedStaff === member.id ? "#111111" : "#f5f7fa",
-                        border: "1px solid",
-                        borderColor: selectedStaff === member.id ? "#111111" : "#e4ebf3",
-                        borderRadius: 16, padding: "16px 12px", textAlign: "center", cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      {member.photoUrl ? (
-                        <img src={member.photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", margin: "0 auto 8px", display: "block" }} />
-                      ) : (
-                        <div style={{
-                          width: 40, height: 40, borderRadius: "50%", margin: "0 auto 8px",
-                          background: selectedStaff === member.id ? "rgba(255,255,255,0.15)" : "#e4ebf3",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontWeight: 800, fontSize: 14, color: selectedStaff === member.id ? "#fff" : "#02060c",
-                        }}>
-                          {member.name[0].toUpperCase()}
-                        </div>
-                      )}
-                      <p style={{ fontWeight: 700, fontSize: 12, color: selectedStaff === member.id ? "#ffffff" : "#02060c" }}>{member.name}</p>
-                      {member.specialization && (
-                        <p style={{ fontSize: 11, color: selectedStaff === member.id ? "rgba(255,255,255,0.6)" : "rgba(2,6,12,0.4)", marginTop: 2 }}>{member.specialization}</p>
-                      )}
+                  {/* Add Image/Button block */}
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    <div className="w-full h-full bg-surface-container rounded-xl overflow-hidden border border-border-light">
+                      <img
+                        className="w-full h-full object-cover"
+                        alt={svc.name}
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgFHRy78LcO4So8cu4g0Gfcvk-Vk9vRBtwKCo_iRKIlzKqrdhnRWyF2aI1du-I2OWPvRl9BPjcYOBefYbBceBH9DYHU-oYz58A8FAvFW1gLFYzYJsDaOPJomH9P1ACxzyzPjaimnax2ZEOkx869HyF8qOAr8pNskCDI16XF86Sc8dlMM-N-zd2D5LD-sgM-AmPn5cy90Ng0-xooC6x3WQClYPiVvCa6njnQLNKXJgdtHQ0KicwirXyMnU4w9D37Ts54_PxQMjgvoBI"
+                      />
                     </div>
-                  ))}
+                    <button
+                      onClick={() => toggleService(svc.id)}
+                      className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 font-bold text-xs px-6 py-1.5 rounded-lg swiggy-shadow border transition-all active:scale-95 duration-100 ${
+                        isSelected
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-rating-green border-border-light hover:border-rating-green"
+                      }`}
+                    >
+                      {isSelected ? "REMOVE" : "ADD"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
           </div>
 
-          {/* Right: Date & Slots */}
-          <div>
-            <div style={{
-              background: "#ffffff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 24,
-              position: "sticky", top: 24,
-            }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#02060c", marginBottom: 20 }}>Date & Time Slot</h3>
-
-              {/* Date picker */}
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 20 }}>
-                {dateOptions.map((opt, i) => (
-                  <button
-                    key={opt.dateStr}
-                    onClick={() => handleDateSelect(i, opt.dateStr)}
-                    style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      padding: "10px 12px", borderRadius: 12, minWidth: 52, border: "1.5px solid",
-                      background: activeDateIndex === i ? "#111111" : "#ffffff",
-                      borderColor: activeDateIndex === i ? "#111111" : "#e4ebf3",
-                      cursor: "pointer", transition: "all 0.15s ease",
-                    }}
-                  >
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: activeDateIndex === i ? "rgba(255,255,255,0.7)" : "rgba(2,6,12,0.4)" }}>
-                      {opt.label}
-                    </span>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: activeDateIndex === i ? "#ffffff" : "#02060c", marginTop: 2 }}>
-                      {opt.dayNum}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Slots */}
-              {selectedServices.length === 0 ? (
-                <div style={{
-                  border: "1.5px dashed #e4ebf3", borderRadius: 16, padding: "24px 16px",
-                  textAlign: "center", color: "rgba(2,6,12,0.4)", fontSize: 13, fontWeight: 600,
-                }}>
-                  Select a service to see available slots.
-                </div>
-              ) : isSlotsLoading ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 0" }}>
-                  <div style={{ width: 24, height: 24, border: "2px solid #e4ebf3", borderTopColor: "#111", borderRadius: "50%" }} />
-                </div>
-              ) : slots.length === 0 ? (
-                <div style={{
-                  border: "1.5px dashed #e4ebf3", borderRadius: 16, padding: "24px 16px",
-                  textAlign: "center", color: "rgba(2,6,12,0.4)", fontSize: 13, fontWeight: 600,
-                }}>
-                  No slots for this date. Try another day.
-                </div>
-              ) : (
+          {/* Date & Time Selector Sidebar (Right Column) */}
+          <div className="lg:col-span-5">
+            <div className="bg-white border border-border-light rounded-xl p-5 swiggy-shadow sticky top-24 space-y-5">
+              
+              {/* Stylist Selector */}
+              {shop.staff.length > 0 && (
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(2,6,12,0.4)", marginBottom: 12 }}>
-                    Available Slots
-                  </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                    {slots.map((timeStr) => (
+                  <h3 className="font-headline-md text-sm text-text-primary mb-3">Choose Stylist (Optional)</h3>
+                  <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                    {/* Any Stylist */}
+                    <button
+                      onClick={() => setSelectedStaff(null)}
+                      className={`flex flex-col items-center justify-center shrink-0 w-16 py-3 rounded-lg border text-center transition-all ${
+                        selectedStaff === null
+                          ? "border-primary bg-primary/5 font-bold"
+                          : "border-border-light bg-white hover:border-primary"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm mb-1.5">
+                        ★
+                      </div>
+                      <span className="text-[10px] text-primary truncate max-w-full">Any</span>
+                    </button>
+
+                    {shop.staff.map((member) => (
                       <button
-                        key={timeStr}
-                        onClick={() => holdMutation.mutate({ startTime: timeStr })}
-                        disabled={holdMutation.isPending}
-                        style={{
-                          background: "#f5f7fa", border: "1.5px solid #e4ebf3",
-                          borderRadius: 10, padding: "10px 4px", cursor: "pointer",
-                          fontFamily: "'Montserrat', Arial, sans-serif",
-                          fontSize: 12, fontWeight: 700, color: "#02060c",
-                          transition: "all 0.15s ease", opacity: holdMutation.isPending ? 0.5 : 1,
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.background = "#111111";
-                          (e.currentTarget as HTMLButtonElement).style.color = "#ffffff";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#111111";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.background = "#f5f7fa";
-                          (e.currentTarget as HTMLButtonElement).style.color = "#02060c";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "#e4ebf3";
-                        }}
+                        key={member.id}
+                        onClick={() => setSelectedStaff(member.id)}
+                        className={`flex flex-col items-center justify-center shrink-0 w-16 py-3 rounded-lg border text-center transition-all ${
+                          selectedStaff === member.id
+                            ? "border-primary bg-primary/5 font-bold"
+                            : "border-border-light bg-white hover:border-primary"
+                        }`}
                       >
-                        {timeStr}
+                        {member.photoUrl ? (
+                          <img
+                            src={member.photoUrl}
+                            alt={member.name}
+                            className="w-8 h-8 rounded-full object-cover mb-1.5 border border-border-light"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary text-xs font-bold mb-1.5">
+                            {member.name[0].toUpperCase()}
+                          </div>
+                        )}
+                        <span className="text-[10px] text-primary truncate max-w-full px-1">{member.name.split(" ")[0]}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Date selection carousel */}
+              <div>
+                <h3 className="font-headline-md text-sm text-text-primary mb-3">Select Date</h3>
+                <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-1">
+                  {dateOptions.map((opt, i) => (
+                    <button
+                      key={opt.dateStr}
+                      onClick={() => handleDateSelect(i, opt.dateStr)}
+                      className={`flex flex-col items-center justify-center shrink-0 w-12 py-2.5 rounded-lg border text-center transition-all ${
+                        activeDateIndex === i
+                          ? "border-primary bg-primary text-white font-bold"
+                          : "border-border-light bg-white hover:border-primary"
+                      }`}
+                    >
+                      <span className={`text-[9px] uppercase font-semibold ${activeDateIndex === i ? "text-white/80" : "text-text-secondary"}`}>
+                        {opt.label}
+                      </span>
+                      <span className={`text-sm font-bold mt-0.5 ${activeDateIndex === i ? "text-white" : "text-primary"}`}>
+                        {opt.dayNum}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slots selection */}
+              <div>
+                <h3 className="font-headline-md text-sm text-text-primary mb-3">Available Slots</h3>
+                {selectedServices.length === 0 ? (
+                  <div className="border border-dashed border-outline-variant rounded-lg p-6 text-center text-xs text-text-secondary/70">
+                    Add a service to view slot availability.
+                  </div>
+                ) : isSlotsLoading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="w-6 h-6 border-2 border-border-light border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="border border-dashed border-outline-variant rounded-lg p-6 text-center text-xs text-text-secondary/70">
+                    No slots available on this date. Try another day.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {slots.map((timeStr) => (
+                      <button
+                        key={timeStr}
+                        onClick={() => holdMutation.mutate({ startTime: timeStr })}
+                        disabled={holdMutation.isPending}
+                        className="py-2.5 px-1 border border-border-light rounded-lg font-body-sm text-[11px] font-bold text-center bg-surface-container-low hover:border-primary transition-colors disabled:opacity-40"
+                      >
+                        {timeStr}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Bottom sticky bar */}
+      {/* ── STICKY BOTTOM CHECKOUT TRIGGER BAR ── */}
       {selectedServices.length > 0 && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          background: "rgba(255,255,255,0.95)", borderTop: "1px solid #e4ebf3",
-          padding: "16px 30px", backdropFilter: "blur(8px)", zIndex: 40,
-        }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <span style={{ fontSize: 12, color: "rgba(2,6,12,0.45)", fontWeight: 600 }}>
-                {selectedServices.length} service{selectedServices.length > 1 ? "s" : ""} · {totalDuration} mins
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border-light p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] md:px-16">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-xs text-text-secondary font-bold">
+                {selectedServices.length} Service{selectedServices.length > 1 ? "s" : ""} · {totalDuration} mins
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
-                <IndianRupee size={16} style={{ color: "#02060c" }} />
-                <span style={{ fontWeight: 900, fontSize: 22, color: "#02060c" }}>{(totalCost / 100).toFixed(0)}</span>
-              </div>
+              <span className="font-headline-md text-lg font-black text-primary mt-0.5">
+                ₹{(totalCost / 100).toFixed(0)}
+              </span>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(2,6,12,0.4)" }}>
-              Select a time slot above to book →
+            <span className="text-xs font-bold text-text-secondary/85 animate-pulse hidden sm:inline">
+              Select an available slot above to secure appointment &rarr;
+            </span>
+            <span className="text-xs font-bold text-text-secondary/85 animate-pulse sm:hidden">
+              Select time slot to book &rarr;
             </span>
           </div>
         </div>

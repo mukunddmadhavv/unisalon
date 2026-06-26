@@ -1,18 +1,14 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard, Scissors, Users, CalendarCheck,
-  Star, LogOut, Settings,
-} from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useNotifications } from "../hooks/useNotifications";
 
 const links = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/shop/edit",  icon: Settings,        label: "My Shop" },
-  { to: "/services",   icon: Scissors,        label: "Services" },
-  { to: "/staff",      icon: Users,           label: "Staff" },
-  { to: "/bookings",   icon: CalendarCheck,   label: "Bookings" },
-  { to: "/reviews",    icon: Star,            label: "Reviews" },
+  { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
+  { to: "/shop/edit",  icon: "storefront", label: "Shop Profile" },
+  { to: "/services",   icon: "content_cut", label: "Services" },
+  { to: "/staff",      icon: "group", label: "Staff" },
+  { to: "/bookings",   icon: "calendar_today", label: "Bookings" },
+  { to: "/reviews",    icon: "star", label: "Reviews" },
 ];
 
 export function Sidebar() {
@@ -26,44 +22,37 @@ export function Sidebar() {
   };
 
   return (
-    <aside style={{
-      width: 256, minHeight: "100vh",
-      background: "#ffffff", borderRight: "1px solid #e4ebf3",
-      display: "flex", flexDirection: "column",
-      fontFamily: "'Montserrat', Arial, sans-serif",
-    }}>
+    <aside className="hidden md:flex w-64 h-screen sticky left-0 top-0 bg-surface border-r border-surface-container-high flex-col py-6 z-50 select-none">
       {/* Brand */}
-      <div style={{ padding: "24px 20px", borderBottom: "1px solid #e4ebf3" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "#111111", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <Scissors size={18} color="#ffffff" />
-          </div>
-          <div>
-            <span style={{ fontWeight: 900, fontSize: 16, color: "#02060c", letterSpacing: "-0.3px" }}>UniSalon</span>
-            <span style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600, marginLeft: 6 }}>Shop</span>
-          </div>
+      <div className="px-6 mb-8 flex items-center gap-3">
+        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>spa</span>
+        </div>
+        <div>
+          <h1 className="font-display text-lg font-black text-primary leading-none">
+            UniSalon
+          </h1>
+          <p className="font-sans text-[10px] uppercase tracking-wider text-on-surface-variant opacity-70 mt-0.5">Shop Manager Portal</p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px 12px" }}>
-        {links.map(({ to, icon: Icon, label }) => (
+      <nav className="flex-1 space-y-1 px-3">
+        {links.map(({ to, icon, label }) => (
           <NavLink
             key={to}
             to={to}
-            style={{ textDecoration: "none", display: "block", marginBottom: 2 }}
-            className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
+            className={({ isActive }) => 
+              `flex items-center gap-3 px-4 py-3 rounded-lg font-sans text-sm font-semibold transition-all duration-200 hover:translate-x-1 ` +
+              (isActive 
+                ? "bg-primary-container text-on-primary-container font-bold shadow-sm" 
+                : "text-on-surface-variant hover:bg-surface-container-high hover:text-primary")
+            }
           >
-            <Icon size={16} />
-            <span>{label}</span>
+            <span className="material-symbols-outlined text-[20px]">{icon}</span>
+            <span className="flex-1">{label}</span>
             {label === "Bookings" && unreadCount > 0 && (
-              <span style={{
-                marginLeft: "auto", background: "#111111", color: "#ffffff",
-                fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 100,
-              }}>
+              <span className="ml-auto bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {unreadCount}
               </span>
             )}
@@ -71,33 +60,24 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* User */}
-      <div style={{ padding: "12px", borderTop: "1px solid #e4ebf3" }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "10px 12px", borderRadius: 14,
-          background: "#f5f7fa",
-        }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            background: "#111111", color: "#ffffff",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 800, fontSize: 14,
-          }}>
+      {/* User info at bottom */}
+      <div className="px-3 pt-4 border-t border-surface-container-high mt-auto">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-surface-container-high">
+          <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm">
             {user?.email?.[0]?.toUpperCase() ?? "O"}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#02060c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user?.email}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-on-surface truncate">
+              {user?.email?.split("@")[0]}
             </p>
-            <p style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600 }}>Shop Owner</p>
+            <p className="text-[10px] text-on-surface-variant font-semibold">Shop Owner</p>
           </div>
           <button
             onClick={handleSignOut}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.35)", padding: 4 }}
+            className="p-1.5 hover:bg-surface-container-highest rounded-full text-on-surface-variant hover:text-error transition-all duration-150 active:scale-90"
             title="Sign out"
           >
-            <LogOut size={15} />
+            <span className="material-symbols-outlined text-[18px]">logout</span>
           </button>
         </div>
       </div>

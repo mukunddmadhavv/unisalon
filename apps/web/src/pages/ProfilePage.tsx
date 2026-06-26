@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import { useNavigate, Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, Star, AlertCircle, LogOut, Scissors, User } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, AlertCircle, LogOut } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Booking {
@@ -17,12 +17,12 @@ interface Booking {
   services: Array<{ serviceName: string; pricePaise: number; }>;
 }
 
-const STATUS_STYLES: Record<string, { bg: string; color: string; border: string }> = {
-  PENDING:   { bg: "#fff8e1", color: "#b45309", border: "#fde68a" },
-  CONFIRMED: { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" },
-  CANCELLED: { bg: "#fef2f2", color: "#991b1b", border: "#fecaca" },
-  COMPLETED: { bg: "#eff6ff", color: "#1e40af", border: "#bfdbfe" },
-  NO_SHOW:   { bg: "#faf5ff", color: "#6b21a8", border: "#e9d5ff" },
+const STATUS_STYLES: Record<string, string> = {
+  PENDING:   "bg-yellow-100 text-yellow-800 border-yellow-200",
+  CONFIRMED: "bg-green-100 text-green-800 border-green-200",
+  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  COMPLETED: "bg-blue-100 text-blue-800 border-blue-200",
+  NO_SHOW:   "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 export default function ProfilePage() {
@@ -41,7 +41,10 @@ export default function ProfilePage() {
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => api.cancelBooking(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customer-bookings"] }); toast.success("Appointment cancelled."); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customer-bookings"] });
+      toast.success("Appointment cancelled.");
+    },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to cancel."),
   });
 
@@ -49,7 +52,9 @@ export default function ProfilePage() {
     mutationFn: (data: { shopId: string; rating: number; comment?: string }) => api.postReview(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customer-bookings"] });
-      setReviewShopId(null); setRating(5); setComment("");
+      setReviewShopId(null);
+      setRating(5);
+      setComment("");
       toast.success("Review submitted!");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Already reviewed."),
@@ -60,67 +65,61 @@ export default function ProfilePage() {
   const displayedBookings = activeTab === "upcoming" ? upcomingBookings : pastBookings;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f7fa", fontFamily: "'Montserrat', Arial, sans-serif" }}>
-
-      {/* Header */}
-      <header style={{ background: "#1a1a1a", padding: "0 30px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <Scissors size={20} color="#ffffff" />
-          <span style={{ fontWeight: 900, fontSize: 18, color: "#ffffff" }}>UniSalon</span>
-        </Link>
-        <Link to="/explore" style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
-          Discover Salons
+    <div className="min-h-screen bg-background pb-24 font-body-md text-text-primary">
+      
+      {/* ── TOP NAV BAR ── */}
+      <header className="bg-white sticky top-0 w-full px-5 py-4 z-50 flex justify-between items-center border-b border-border-light max-w-4xl mx-auto">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="p-1 hover:bg-surface-container rounded-full transition-colors">
+            <span className="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+          </Link>
+          <h1 className="font-display font-black text-lg tracking-tight text-primary">My Account</h1>
+        </div>
+        <Link to="/explore" className="text-xs font-bold text-text-secondary hover:text-primary transition-colors">
+          Discover Partner Salons
         </Link>
       </header>
 
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 30px", display: "grid", gridTemplateColumns: "240px 1fr", gap: 24 }}>
-
-        {/* Sidebar */}
-        <aside>
-          <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 24, textAlign: "center" }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%",
-              background: "#111111", color: "#ffffff",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontWeight: 900, fontSize: 24, margin: "0 auto 16px",
-            }}>
-              {user?.email?.[0].toUpperCase() ?? <User size={24} />}
+      {/* ── PAGE LAYOUT ── */}
+      <div className="max-w-4xl mx-auto mt-6 px-5 grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        {/* Profile Info Card (Left Sidebar) */}
+        <aside className="md:col-span-4">
+          <div className="bg-white border border-border-light rounded-xl p-5 swiggy-shadow text-center">
+            <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl mx-auto mb-4 shadow-sm">
+              {user?.email?.[0].toUpperCase() ?? "U"}
             </div>
-            <p style={{ fontWeight: 700, fontSize: 14, color: "#02060c", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <p className="font-bold text-sm text-primary truncate px-2 mb-0.5">
               {user?.email}
             </p>
-            <p style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600, marginBottom: 20 }}>Customer Account</p>
+            <p className="text-[10px] text-text-secondary font-bold uppercase tracking-wider mb-5">Customer Account</p>
 
             <button
               onClick={() => { signOut(); navigate("/"); toast.success("Signed out."); }}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                width: "100%", padding: "10px 16px", borderRadius: 12,
-                background: "#fef2f2", border: "1px solid #fecaca",
-                color: "#991b1b", fontWeight: 700, fontSize: 13, cursor: "pointer",
-                fontFamily: "'Montserrat', Arial, sans-serif",
-              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors"
             >
               <LogOut size={14} /> Sign Out
             </button>
           </div>
         </aside>
 
-        {/* Bookings */}
-        <section>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 0, borderBottom: "2px solid #e4ebf3", marginBottom: 24 }}>
-            {[["upcoming", `Upcoming (${upcomingBookings.length})`], ["past", `Past Visits (${pastBookings.length})`]].map(([tab, label]) => (
+        {/* Bookings List Panel (Right Column) */}
+        <section className="md:col-span-8 space-y-5">
+          
+          {/* Tab Options */}
+          <div className="flex border-b border-border-light">
+            {[
+              ["upcoming", `Upcoming (${upcomingBookings.length})`],
+              ["past", `Past Visits (${pastBookings.length})`],
+            ].map(([tab, label]) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as "upcoming" | "past")}
-                style={{
-                  padding: "12px 20px", background: "none", border: "none", cursor: "pointer",
-                  fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 14, fontWeight: 700,
-                  color: activeTab === tab ? "#111111" : "rgba(2,6,12,0.4)",
-                  borderBottom: activeTab === tab ? "2px solid #111111" : "2px solid transparent",
-                  marginBottom: -2, transition: "all 0.15s ease",
-                }}
+                className={`pb-2.5 px-4 text-sm font-bold transition-all border-b-2 ${
+                  activeTab === tab
+                    ? "text-primary border-primary"
+                    : "text-text-secondary border-transparent hover:text-primary"
+                }`}
               >
                 {label}
               </button>
@@ -128,71 +127,68 @@ export default function ProfilePage() {
           </div>
 
           {isLoading ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0" }}>
-              <div style={{ width: 32, height: 32, border: "3px solid #e4ebf3", borderTopColor: "#111", borderRadius: "50%" }} />
+            <div className="flex items-center justify-center py-16">
+              <div className="w-8 h-8 border-2 border-border-light border-t-primary rounded-full animate-spin" />
             </div>
           ) : displayedBookings.length === 0 ? (
-            <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: "64px 32px", textAlign: "center" }}>
-              <AlertCircle size={36} style={{ color: "rgba(2,6,12,0.2)", display: "block", margin: "0 auto 12px" }} />
-              <p style={{ fontWeight: 700, fontSize: 16, color: "#02060c" }}>No bookings yet</p>
-              <p style={{ fontSize: 13, color: "rgba(2,6,12,0.45)", marginTop: 6 }}>Your reservation history is empty.</p>
-              <Link to="/" className="btn-primary" style={{ display: "inline-block", marginTop: 20 }}>
+            <div className="bg-white border border-border-light rounded-xl p-12 text-center swiggy-shadow">
+              <AlertCircle size={36} className="text-text-secondary/30 mx-auto mb-3" />
+              <p className="font-bold text-sm text-primary">No appointments found</p>
+              <p className="text-xs text-text-secondary mt-1">Your appointment listing is currently empty.</p>
+              <Link to="/" className="btn-primary inline-flex mt-5 !text-xs !py-2.5">
                 Discover Salons
               </Link>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="flex flex-col gap-4">
               {displayedBookings.map((booking) => {
-                const s = STATUS_STYLES[booking.status] ?? STATUS_STYLES.PENDING;
                 return (
-                  <div key={booking.id} style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 24 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div
+                    key={booking.id}
+                    className="bg-white border border-border-light rounded-xl p-5 swiggy-shadow space-y-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h4 style={{ fontWeight: 800, fontSize: 16, color: "#02060c", marginBottom: 6 }}>{booking.shop.name}</h4>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(2,6,12,0.45)", fontWeight: 600 }}>
-                          <MapPin size={11} /> {booking.shop.address}, {booking.shop.city}
+                        <h4 className="font-headline-md text-sm font-bold text-primary mb-1">{booking.shop.name}</h4>
+                        <div className="flex items-center gap-1 text-xs text-text-secondary font-medium">
+                          <MapPin size={12} className="text-text-secondary/70 shrink-0" />
+                          <span className="truncate">{booking.shop.address}, {booking.shop.city}</span>
                         </div>
                       </div>
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, letterSpacing: "0.3px",
-                        background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-                        borderRadius: 100, padding: "4px 12px",
-                      }}>
+                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${STATUS_STYLES[booking.status] ?? "bg-gray-100 text-gray-800"}`}>
                         {booking.status}
                       </span>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", padding: "14px 0", marginBottom: 14 }}>
+                    <div className="grid grid-cols-2 gap-4 border-t border-b border-border-light py-4 text-xs font-semibold">
                       <div>
-                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(2,6,12,0.35)", marginBottom: 8 }}>Schedule</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13, fontWeight: 600, color: "#02060c" }}>
-                          <Calendar size={13} color="rgba(2,6,12,0.4)" /> {booking.date}
+                        <p className="text-[9px] font-bold text-text-secondary uppercase mb-2">Schedule</p>
+                        <div className="flex items-center gap-1.5 font-bold text-primary">
+                          <Calendar size={13} className="text-text-secondary/80" />
+                          <span>{booking.date}</span>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#02060c" }}>
-                          <Clock size={13} color="rgba(2,6,12,0.4)" /> {booking.startTime} – {booking.endTime}
+                        <div className="flex items-center gap-1.5 mt-1 font-bold text-primary">
+                          <Clock size={13} className="text-text-secondary/80" />
+                          <span>{booking.startTime} – {booking.endTime}</span>
                         </div>
                       </div>
                       <div>
-                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(2,6,12,0.35)", marginBottom: 8 }}>Services</p>
+                        <p className="text-[9px] font-bold text-text-secondary uppercase mb-2">Services</p>
                         {booking.services.map((s, i) => (
-                          <p key={i} style={{ fontSize: 13, fontWeight: 600, color: "#02060c", marginBottom: 4 }}>• {s.serviceName}</p>
+                          <p key={i} className="font-bold text-primary truncate">&bull; {s.serviceName}</p>
                         ))}
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(2,6,12,0.55)" }}>
-                        ₹{(booking.totalAmount / 100).toFixed(0)} — Pay Cash
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-text-secondary/85">
+                        ₹{(booking.totalAmount / 100).toFixed(0)} &bull; Cash payment
                       </span>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div className="flex gap-2">
                         {activeTab === "upcoming" && ["PENDING", "CONFIRMED"].includes(booking.status) && (
                           <button
                             onClick={() => { if (confirm("Cancel this booking?")) cancelMutation.mutate(booking.id); }}
-                            style={{
-                              background: "#fef2f2", border: "1px solid #fecaca",
-                              color: "#991b1b", borderRadius: 10, padding: "8px 16px",
-                              fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                            }}
+                            className="px-3.5 py-1.5 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors"
                           >
                             Cancel
                           </button>
@@ -200,8 +196,7 @@ export default function ProfilePage() {
                         {activeTab === "past" && booking.status === "COMPLETED" && (
                           <button
                             onClick={() => setReviewShopId(booking.shop.id)}
-                            className="btn-primary"
-                            style={{ padding: "8px 16px", fontSize: 12 }}
+                            className="bg-primary text-on-primary text-xs font-bold px-3.5 py-1.5 rounded-lg hover:opacity-90 active:scale-95 transition-all"
                           >
                             Write Review
                           </button>
@@ -216,44 +211,54 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      {/* Review Modal */}
+      {/* Review Modal popup */}
       {reviewShopId && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setReviewShopId(null)} />
-          <div style={{
-            position: "relative", background: "#fff", border: "1px solid #e4ebf3",
-            borderRadius: 28, padding: 32, width: "100%", maxWidth: 440,
-            fontFamily: "'Montserrat', Arial, sans-serif",
-          }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: "#02060c", marginBottom: 6 }}>Write a Review</h3>
-            <p style={{ fontSize: 13, color: "rgba(2,6,12,0.5)", marginBottom: 24 }}>Share your experience with the salon.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setReviewShopId(null)} />
+          <div className="relative bg-white border border-border-light rounded-xl p-6 w-full max-w-sm swiggy-shadow">
+            <h3 className="font-headline-md text-base text-primary mb-1">Write a Review</h3>
+            <p className="text-xs text-text-secondary font-medium mb-4">Share your feedback about the service received.</p>
 
-            <form onSubmit={(e) => { e.preventDefault(); if (!reviewShopId) return; reviewMutation.mutate({ shopId: reviewShopId, rating, comment: comment.trim() || undefined }); }}>
-              <div style={{ marginBottom: 20 }}>
-                <label className="label">Rating</label>
-                <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!reviewShopId) return;
+                reviewMutation.mutate({ shopId: reviewShopId, rating, comment: comment.trim() || undefined });
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5 block">Rating</label>
+                <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((num) => (
-                    <button key={num} type="button" onClick={() => setRating(num)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                      <Star size={28} style={{ color: num <= rating ? "#f59e0b" : "#e4ebf3", fill: num <= rating ? "#f59e0b" : "#e4ebf3", transition: "all 0.1s" }} />
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setRating(num)}
+                      className="p-0.5 hover:scale-110 transition-transform"
+                    >
+                      <Star
+                        size={24}
+                        className={num <= rating ? "text-secondary fill-secondary" : "text-border-light fill-border-light"}
+                      />
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div style={{ marginBottom: 24 }}>
-                <label className="label">Comments (Optional)</label>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5 block">Comments (Optional)</label>
                 <textarea
-                  className="input"
-                  style={{ minHeight: 90, resize: "vertical", marginTop: 6 }}
-                  placeholder="e.g. Great haircut! Very professional staff..."
+                  className="us-input !rounded-xl !pl-4 !py-3 !text-xs border border-border-light hover:border-primary min-h-[80px] resize-y"
+                  placeholder="Describe your styling experience..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: 12 }}>
-                <button type="button" onClick={() => setReviewShopId(null)} className="btn-outline" style={{ flex: 1 }}>Cancel</button>
-                <button type="submit" disabled={reviewMutation.isPending} className="btn-primary" style={{ flex: 1 }}>
+              <div className="flex gap-2 pt-2 text-xs">
+                <button type="button" onClick={() => setReviewShopId(null)} className="btn-outline flex-1 justify-center">Cancel</button>
+                <button type="submit" disabled={reviewMutation.isPending} className="btn-primary flex-1 justify-center">
                   {reviewMutation.isPending ? "Submitting..." : "Submit Review"}
                 </button>
               </div>

@@ -35,21 +35,62 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
 
   const { prisma } = await import("@unisalon/db");
 
-  // Check if admin
   const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim());
-  if (adminEmails.includes(data.user.email ?? "")) {
-    return { supabaseId: data.user.id, email: data.user.email!, role: "ADMIN" };
-  }
+  const isAdmin = adminEmails.includes(data.user.email ?? "");
 
-  // Check shop owner
-  const owner = await prisma.shopOwner.findUnique({
+  // Check shop owner or auto-create if owner metadata exists
+  let owner = await prisma.shopOwner.findUnique({
     where: { supabaseId: data.user.id },
     select: { id: true },
   });
+
+  if (!owner && data.user.user_metadata?.role === "OWNER") {
+    try {
+      const newOwner = await prisma.shopOwner.create({
+        data: {
+          supabaseId: data.user.id,
+          email: data.user.email ?? "",
+          name: data.user.user_metadata?.name ?? data.user.email?.split("@")[0] ?? "Shop Owner",
+          phone: data.user.user_metadata?.phone ?? "0000000000",
+        },
+      });
+      owner = { id: newOwner.id };
+    } catch (e) {
+      console.error("Failed to auto-create shop owner on token verification:", e);
+    }
+  }
+
   if (owner) {
     return { supabaseId: data.user.id, email: data.user.email!, role: "OWNER" };
+  }
+
+  // Check customer/admin or auto-create
+  let customer = await prisma.user.findUnique({
+    where: { supabaseId: data.user.id },
+    select: { id: true },
+  });
+
+  if (!customer) {
+    try {
+      await prisma.user.create({
+        data: {
+          supabaseId: data.user.id,
+          email: data.user.email ?? "",
+          name: data.user.user_metadata?.name ?? data.user.email?.split("@")[0] ?? (isAdmin ? "Admin" : "Customer"),
+          phone: data.user.user_metadata?.phone ?? null,
+          role: isAdmin ? "ADMIN" : "CUSTOMER",
+        },
+      });
+    } catch (e) {
+      console.error("Failed to auto-create user on token verification:", e);
+    }
+  }
+
+  if (isAdmin) {
+    return { supabaseId: data.user.id, email: data.user.email!, role: "ADMIN" };
   }
 
   // Default: customer
   return { supabaseId: data.user.id, email: data.user.email!, role: "CUSTOMER" };
 }
+

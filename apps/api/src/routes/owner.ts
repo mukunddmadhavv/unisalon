@@ -1,13 +1,96 @@
 import { Elysia, t } from "elysia";
 import { prisma, type ServiceCategory } from "@unisalon/db";
 import { requireOwner } from "../middleware/auth";
+import { authPlugin } from "../middleware/auth";
+import { supabaseAdmin } from "../lib/supabase";
 import slugify from "slugify";
 
 const auth = requireOwner();
+// A lighter guard that just needs a valid Supabase token (any role)
+const anyAuth = authPlugin("CUSTOMER", "OWNER", "ADMIN");
 
 export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
+
+  // ─── Register: create ShopOwner row after Supabase signup ─────────
+  .use(anyAuth)
+  .post(
+    "/register",
+    async ({ body, auth: user }) => {
+      const existing = await prisma.shopOwner.findUnique({
+        where: { supabaseId: user.supabaseId },
+      });
+      if (existing) return { success: true, data: existing };
+
+      const owner = await prisma.shopOwner.create({
+        data: {
+          supabaseId: user.supabaseId,
+          email: user.email,
+          name: body.name,
+          phone: body.phone,
+        },
+      });
+      return { success: true, data: owner };
+    },
+    {
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        phone: t.String({ minLength: 10 }),
+      }),
+    }
+  )
+
+  // ─── Upload: server-side image upload (bypasses storage RLS) ──────
+  .post(
+    "/upload",
+    async ({ body }) => {
+      const { file, bucket, path } = body as {
+        file: File;
+        bucket: string;
+        path: string;
+      };
+
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuffer);
+
+      const { error, data } = await supabaseAdmin.storage
+        .from(bucket)
+        .upload(path, uint8, {
+          contentType: file.type || "image/jpeg",
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (error) throw new Error(`Storage upload failed: ${error.message}`);
+
+      const { data: urlData } = supabaseAdmin.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      return { success: true, data: { url: urlData.publicUrl } };
+    },
+    {
+      // multipart/form-data
+      type: "formdata",
+      body: t.Object({
+        file: t.File({ maxSize: "10m" }),
+        bucket: t.String(),
+        path: t.String(),
+      }),
+    }
+  )
+
   .use(auth)
   // ─── Shop CRUD ─────────────────────────────────────────────────────
+  .get(
+    "/shop",
+    async ({ auth }) => {
+      const shop = await prisma.shop.findFirst({
+        where: { owner: { supabaseId: auth.supabaseId } },
+      });
+      return { success: true, data: shop };
+    }
+  )
+
   .post(
     "/shops",
     async ({ body, auth }) => {
@@ -73,6 +156,23 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   )
 
   // ─── Staff CRUD ────────────────────────────────────────────────────
+  .get(
+    "/staff",
+    async ({ auth }) => {
+      const shop = await prisma.shop.findFirst({
+        where: { owner: { supabaseId: auth.supabaseId } },
+        select: { id: true },
+      });
+      if (!shop) return { success: true, data: [] };
+
+      const staff = await prisma.staffMember.findMany({
+        where: { shopId: shop.id },
+        orderBy: { displayOrder: "asc" },
+      });
+      return { success: true, data: staff };
+    }
+  )
+
   .post(
     "/staff",
     async ({ body, auth, set }) => {
@@ -134,6 +234,23 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   })
 
   // ─── Service CRUD ──────────────────────────────────────────────────
+  .get(
+    "/services",
+    async ({ auth }) => {
+      const shop = await prisma.shop.findFirst({
+        where: { owner: { supabaseId: auth.supabaseId } },
+        select: { id: true },
+      });
+      if (!shop) return { success: true, data: [] };
+
+      const services = await prisma.service.findMany({
+        where: { shopId: shop.id },
+        orderBy: { displayOrder: "asc" },
+      });
+      return { success: true, data: services };
+    }
+  )
+
   .post(
     "/services",
     async ({ body, auth, set }) => {
