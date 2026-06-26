@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
-import { MapPin, Search, Navigation, Compass, Star, LogOut, User, Scissors } from "lucide-react";
+import { LogOut, Navigation, Compass } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Shop {
@@ -20,36 +20,18 @@ interface Shop {
 }
 
 const CATEGORIES = [
-  { name: "HAIRCUT",    emoji: "💇‍♂️", label: "Haircut" },
-  { name: "BEARD",      emoji: "🧔",   label: "Beard Grooming" },
-  { name: "FACIAL",     emoji: "🧴",   label: "Facial Care" },
-  { name: "MASSAGE",    emoji: "💆",   label: "Massage" },
-  { name: "HAIR_COLOR", emoji: "🎨",   label: "Hair Color" },
-  { name: "HAIR_SPA",   emoji: "🧼",   label: "Hair Spa" },
-];
-
-const FEATURES = [
-  {
-    emoji: "🏷️",
-    title: "Offline Prices,\nOnline Convenience",
-    sub: "Pay what you see on the salon's menu board",
-  },
-  {
-    emoji: "⚡",
-    title: "Instant Slot\nBooking",
-    sub: "90-second atomic hold prevents double-booking",
-  },
-  {
-    emoji: "🚀",
-    title: "Skip the Queue\nCompletely",
-    sub: "Walk in exactly at your slot, no waiting needed",
-  },
+  { name: "HAIRCUT",    label: "Haircut",   image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzJd0ob1bPIkOt83N0fmE5INkQ0F7ART4vtlT_DHQUBQjYbjAsIDF8j8WOM0nIkEzy9oCBjc1GfQaFZqUXSy4TLUHCgDD0iPKGQKNgf-ax6pgzpwMxdJUx2aNdkBNV0yKfRQIAktiJ-srPtJq3WnVGVS81J71uyewEKS7atPGe9pbO9vHEhHQUG1L7jlI_sSMCDNU1VCUIsZT-PRPaIYyXG1z7WAvybonv-Knkzwh9nWJr1BlZAd-ocsuxfsdNBNvL94jIA4jAzShK" },
+  { name: "BEARD",      label: "Beard",     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCrUOBtr0KwfF7av4hAl9gU0NHMOz1qUB2VCzP20BfGLwZu9y8zmpsykkSNE73kAEVhKp0U-IWnAzaemYrg4xF7yQ-sdcoITBAHZHJtvBwjNhk6YDmHB2FZaQSI6Lul99NQB3GD3ab6pa1aS8rNtjco_ZiKv2dbeqoKZRZur1-Rmp4YE1RqAg32GwmncJ_lYHGc9R8QO6kG3eL_bagktkoNJ0Im-CIf0SGChfHr0ZbW5W02S_tb2_fCSS7oyCUFC3eoOhftfBCyzQtx" },
+  { name: "FACIAL",     label: "Facial",    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuADG8SfsuTWlSaMouxIKPlnumt97sNaAEPX43owmdMhaT8dZiee3ycfENOPqNbWfbKIxIyEtex7OBRjsKl07BFVUISaIWCsNdzl_7M46lpCBIw-AIP9gTdSUjgo4R8wOiP5ylYpQa8BGg5wwHPEKrXzQvqhCQlmyJp0n3O7w8613zbxZBUC2lFZL5pGo1pB1F69gBykuQP0wC35u08dYPUlOS2JzxOTdTSfehmAjTXStcULPoCfSdIUnuPUJ-mOfXBEkrBfJ2G0Lis7" },
+  { name: "MASSAGE",    label: "Spa",       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDs7e8RY46DHRkwSUEdG1fseqcHkUcsWPg3r4osWmbh_Jg0aBx9ehDg6Wfv7yahOVk43PSzKhLCxZWD7G2VW680vphHvPg0DEBSh47zzK1B3oogmL7WUnM552amclJdtKQ-BKaMYdhQIl4z5GiwLKlzn97KNpGKGku0X586RzhXBCttY3_DlvQE2rc2sOyabKf2AgFNDyVnA6vW7Jhxo1dK3DwrTsvPRlQXfOvBvT7gChSjBi1_N4E27iHp_eUM1ke2V3-4CE7K7dLw" },
+  { name: "HAIR_COLOR", label: "Color",     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAS7_WSLSiJaYZocAfer-ZTXwtoH5T-lQaRJc6t816B_ZIeUodfdXPINzKYTGyOvGL4l59OkBfgJxiA5I0bLCQowBTsATNt2rLCHTWopI4iJ70ckeMq_HLCKdrcU_2Rr94wV5h7vwGoQDxPDM6caoZSdgYJXyCMORwF69oheML6k058NoOJd4jVaj7XFm1AXK2GE4PBYBPBM7qcsQLGCmTL4V-1A1d4B9HOy4s5xI3SQbtls6ul2Inv3aPSNZJt_mGSE1Oh3cKwjGY_" },
 ];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { session, signOut } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
+
   const [geoError, setGeoError] = useState(false);
   const [lat, setLat] = useState<string | null>(localStorage.getItem("user-lat"));
   const [lng, setLng] = useState<string | null>(localStorage.getItem("user-lng"));
@@ -101,10 +83,6 @@ export default function HomePage() {
     );
   };
 
-  useEffect(() => {
-    if (!lat && !lng && !localStorage.getItem("user-district")) requestLocation();
-  }, []);
-
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setSelectedDistrict(val);
@@ -115,6 +93,10 @@ export default function HomePage() {
     localStorage.removeItem("user-lng");
   };
 
+  useEffect(() => {
+    if (!lat && !lng && !localStorage.getItem("user-district")) requestLocation();
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) navigate(`/explore?search=${encodeURIComponent(searchTerm.trim())}`);
@@ -123,386 +105,259 @@ export default function HomePage() {
   const shops = shopsResponse?.shops ?? [];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#ffffff", fontFamily: "'Montserrat', Arial, sans-serif" }}>
-
-      {/* ── NAVBAR ── */}
-      <nav style={{
-        backgroundColor: "#1a1a1a",
-        padding: "0 30px",
-        height: "64px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-      }}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <Scissors size={20} color="#ffffff" />
-          <span style={{ fontWeight: 900, fontSize: 20, color: "#ffffff", letterSpacing: "-0.5px" }}>
-            UniSalon
-          </span>
-        </Link>
-
-        {/* Location pill */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <MapPin size={14} color="rgba(255,255,255,0.5)" />
-          {lat && lng ? (
-            <button onClick={requestLocation} style={{
-              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: 100, padding: "5px 14px", color: "#ffffff",
-              fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
-            }}>
-              <Navigation size={10} style={{ fill: "white" }} /> Nearby (GPS)
-            </button>
-          ) : (
-            <select
-              value={selectedDistrict}
-              onChange={handleDistrictChange}
-              style={{
-                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 100, padding: "5px 14px", color: "#ffffff",
-                fontSize: 12, fontWeight: 600, cursor: "pointer", outline: "none",
-              }}
-            >
-              {districts.map((d) => (
-                <option key={d} value={d} style={{ background: "#1a1a1a", color: "#fff" }}>{d}</option>
-              ))}
-            </select>
-          )}
+    <div className="min-h-screen bg-background text-text-primary pb-28 font-body-md">
+      
+      {/* ── TOP BAR (SWIGGY HEADER) ── */}
+      <header className="bg-white sticky top-0 w-full px-5 py-3.5 z-50 flex justify-between items-center border-b border-border-light shadow-sm transition-colors duration-200">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[24px]">location_on</span>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Location</span>
+            <div className="flex items-center gap-1">
+              {lat && lng ? (
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  className="font-headline-md text-sm text-primary flex items-center gap-1 hover:opacity-80 text-left font-bold"
+                >
+                  <Navigation size={12} className="fill-primary" />
+                  Nearby (GPS)
+                </button>
+              ) : (
+                <div className="relative flex items-center">
+                  <select
+                    value={selectedDistrict}
+                    onChange={handleDistrictChange}
+                    className="appearance-none pr-6 bg-transparent font-headline-md text-sm font-bold text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+                  >
+                    {districts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined text-[16px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Profile / Actions */}
+        <div className="flex items-center gap-4">
           {session ? (
-            <>
-              <Link to="/profile" className="btn-outline" style={{
-                padding: "8px 16px", fontSize: 13, borderColor: "rgba(255,255,255,0.2)",
-                color: "#ffffff", gap: 6,
-              }}>
-                <User size={13} /> My Bookings
+            <div className="flex items-center gap-3">
+              <Link
+                to="/profile"
+                className="w-9 h-9 rounded-full overflow-hidden border border-border-light flex items-center justify-center bg-surface-container"
+              >
+                <img
+                  className="w-full h-full object-cover"
+                  alt="Profile"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
+                />
               </Link>
-              <button onClick={() => { signOut(); toast.success("Signed out"); }} style={{
-                background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)",
-              }}>
+              <button
+                onClick={() => { signOut(); toast.success("Signed out"); }}
+                className="p-2 hover:bg-surface-container rounded-full text-text-secondary hover:text-primary transition-all duration-150"
+                title="Sign out"
+              >
                 <LogOut size={16} />
               </button>
-            </>
+            </div>
           ) : (
-            <Link to="/auth/login" className="btn-primary" style={{ padding: "8px 20px", fontSize: 13 }}>
+            <Link
+              to="/auth/login"
+              className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all"
+            >
               Sign In
             </Link>
           )}
         </div>
-      </nav>
+      </header>
 
-      {/* ── HERO BANNER (Toingit-style dark rounded section) ── */}
-      <div className="section-dark" style={{ padding: "72px 30px 80px", position: "relative", overflow: "hidden" }}>
-        <div style={{ maxWidth: 1440, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 40 }}>
-          {/* Left: headline + search */}
-          <div style={{ flex: "1 1 auto", maxWidth: 600 }}>
-            <p style={{
-              fontSize: 13, fontWeight: 700, letterSpacing: "1.6px", textTransform: "uppercase",
-              color: "rgba(255,255,255,0.5)", marginBottom: 16,
-            }}>
-              India's Salon Discovery Platform
-            </p>
-            <h1 style={{
-              fontFamily: "'Montserrat', Arial, sans-serif",
-              fontSize: "clamp(2.8rem, 5vw, 4.7rem)",
-              fontWeight: 900,
-              lineHeight: "1em",
-              letterSpacing: "-1px",
-              color: "#ffffff",
-              margin: "0 0 24px 0",
-              textTransform: "capitalize",
-            }}>
-              Hair done.<br />
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>Price right.</span>
-            </h1>
-            <p style={{ fontSize: 16, fontWeight: 500, lineHeight: "1.6", color: "rgba(255,255,255,0.65)", marginBottom: 32 }}>
-              Discover salons, book slots instantly, skip the waiting queue — across India.
-            </p>
+      {/* ── MAIN CONTENT ── */}
+      <main className="max-w-4xl mx-auto">
+        
+        {/* Search Input Box */}
+        <section className="px-5 py-4">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-white border border-border-light rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search for salons, services or more"
+              className="w-full border-none p-0 bg-transparent text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
+            />
+            <button type="submit" className="absolute right-4 text-text-secondary flex items-center">
+              <span className="material-symbols-outlined">search</span>
+            </button>
+          </form>
 
-            {/* Search bar */}
-            <form onSubmit={handleSearchSubmit} style={{ position: "relative", maxWidth: 520 }}>
-              <Search size={16} style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.4)" }} />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search salons, services, cities..."
-                style={{
-                  width: "100%", boxSizing: "border-box",
-                  background: "#ffffff", border: "none", borderRadius: 15,
-                  padding: "16px 140px 16px 48px",
-                  fontFamily: "'Montserrat', Arial, sans-serif",
-                  fontSize: 14, fontWeight: 500, color: "#02060c", outline: "none",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
-                }}
-              />
-              <button type="submit" className="btn-primary" style={{
-                position: "absolute", right: 6, top: 6, bottom: 6,
-                padding: "0 20px", fontSize: 13, borderRadius: 10,
-              }}>
-                Find Salons
-              </button>
-            </form>
+          {geoError && (
+            <div className="mt-3 flex items-center gap-2 text-xs text-text-secondary bg-surface-container p-2.5 rounded-lg border border-border-light animate-fade-in">
+              <Compass size={13} className="text-secondary shrink-0" />
+              <span>GPS unavailable — listing salons in {selectedDistrict}.</span>
+              <button onClick={requestLocation} className="text-primary font-bold underline ml-auto">Retry GPS</button>
+            </div>
+          )}
+        </section>
 
-            {geoError && (
-              <div style={{
-                marginTop: 12, display: "flex", alignItems: "center", gap: 8,
-                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 12, padding: "10px 16px",
-              }}>
-                <Compass size={14} color="rgba(255,255,255,0.6)" />
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-                  GPS unavailable — using district filter.
-                </span>
-                <button onClick={requestLocation} style={{
-                  fontSize: 12, fontWeight: 700, color: "#ffffff", background: "none",
-                  border: "none", cursor: "pointer", textDecoration: "underline",
-                }}>
-                  Retry
-                </button>
-              </div>
-            )}
+        {/* Hero Promo Banners Carousel */}
+        <section className="px-5 py-2 overflow-x-auto no-scrollbar flex gap-4">
+          <div className="min-w-[82vw] sm:min-w-[340px] aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 to-transparent z-10"></div>
+            <div className="absolute inset-0 z-20 p-5 flex flex-col justify-center text-white">
+              <h2 className="font-headline-lg-mobile text-lg text-white leading-tight font-black">
+                First Appointment?<br />
+                <span className="text-secondary-container">50% OFF</span>
+              </h2>
+              <p className="text-white/90 text-[10px] font-bold tracking-widest mt-1.5 uppercase bg-white/20 px-2 py-0.5 rounded w-fit">Code: LUXE50</p>
+            </div>
+            <img
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              alt="Luxury salon interior"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkmTO9Uz-IooBN3QOxWRMB1iPUKHvf7Wrh9UT7_nLrpMZJNB67-bopOD67xrqHR9w1TvxdUHUd-t6S6gpkBV_1_1usdNVZZoWVqaicKCZyu2kUDSC6-sxznUXSo-STNUDFVOa4IVFrmRSwqeO-Q6VJw5748cxXO1sG-8hE4FcTv-Sr2iqS5j64qTmw6y7h4qXPVM-LrKbr05jW-6gFDKK5rvaaqxXHsq7zJHfF3uvv4AUlMvdN-XbgaRcrH0xl8DzYSJzQgkH53NqJ"
+            />
           </div>
 
-          {/* Right: decorative element */}
-          <div style={{
-            flex: "0 0 auto", width: 300, height: 300,
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 120,
-          }}>
-            ✂️
+          <div className="min-w-[82vw] sm:min-w-[340px] aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 to-transparent z-10"></div>
+            <div className="absolute inset-0 z-20 p-5 flex flex-col justify-center text-white">
+              <h2 className="font-headline-lg-mobile text-lg text-white leading-tight font-black">
+                Grooming Kits<br />
+                <span className="text-secondary-container">SAVE ₹499</span>
+              </h2>
+              <p className="text-white/90 text-[10px] font-bold tracking-widest mt-1.5 uppercase bg-white/20 px-2 py-0.5 rounded w-fit">Bundle & Save</p>
+            </div>
+            <img
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              alt="Male grooming kits"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAtYPy4JSfuQCzjc8e3m2JcQvYHKoiS8t8EjI6iyMsxTX1j3nFpEnb4O5t5ZUlJlaalxSb7RhpHmDORZ42hXIO6gEHm-5L-VFvg1O9oBmXStK3Nx--WZ5KGlHsOvvHTwQKYvE1i1Yvuzb12UdGlc1q2ic-MYPtahqtiA_htMP0plKZWiBz0IaFSbecBYPi1lF0o4CUpxjIDgUKLl_N263Fxt8FtOGiaYlXAAe8QZcxHwJ771rzZ7Y49byGaXk-gmq5mwmbyceVLb1S"
+            />
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* ── FEATURES SECTION ── */}
-      <div style={{ backgroundColor: "#ffffff", paddingTop: 80, paddingBottom: 80, paddingLeft: 30, paddingRight: 30 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 700, color: "#02060c", letterSpacing: "-0.5px", textAlign: "center" }}>
-              What you get to enjoy
-            </h1>
+        {/* Categories Circle roundels */}
+        <section className="py-6">
+          <div className="px-5 mb-4">
+            <h3 className="font-headline-md text-base text-text-primary">What's on your mind?</h3>
           </div>
-          <p style={{ textAlign: "center", color: "rgba(2,6,12,0.55)", fontSize: 16, fontWeight: 500, marginBottom: 48 }}>
-            Booking that just works — no queues, no surprises.
-          </p>
-
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "space-between" }}>
-            {FEATURES.map((f, i) => (
-              <div key={i} className="feature-card" style={{
-                flex: "1 1 300px", minWidth: 280,
-                padding: "40px 40px 40px 40px",
-                marginTop: i === 1 ? 0 : 40,
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>{f.emoji}</div>
-                <div style={{
-                  fontFamily: "'Montserrat', Arial, sans-serif",
-                  fontSize: 22, fontWeight: 700, lineHeight: "28px",
-                  color: "#02060c", whiteSpace: "pre-line", marginBottom: 8,
-                }}>
-                  {f.title}
-                </div>
-                <div style={{
-                  fontFamily: "'Montserrat', Arial, sans-serif",
-                  fontSize: 16, fontWeight: 500, lineHeight: "22px",
-                  color: "rgba(2,6,12,0.6)",
-                }}>
-                  {f.sub}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── CATEGORIES SECTION ── */}
-      <div style={{ backgroundColor: "#f5f7fa", paddingTop: 64, paddingBottom: 80, paddingLeft: 30, paddingRight: 30 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 700, color: "#02060c", letterSpacing: "-0.5px", textAlign: "center" }}>
-              Browse by category
-            </h1>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16 }}>
+          <div className="flex overflow-x-auto no-scrollbar px-5 gap-5 pb-1">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.name}
                 to={`/explore?category=${cat.name}`}
-                style={{ textDecoration: "none" }}
+                className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
               >
-                <div style={{
-                  background: "#ffffff", border: "1px solid #e4ebf3",
-                  borderRadius: 20, padding: "24px 16px",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-                  cursor: "pointer", transition: "all 0.2s ease",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.10)";
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "#111111";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "#e4ebf3";
-                  }}
-                >
-                  <span style={{ fontSize: 36 }}>{cat.emoji}</span>
-                  <span style={{ fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 13, fontWeight: 700, color: "#02060c", textAlign: "center" }}>
-                    {cat.label}
-                  </span>
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-surface border border-border-light hover:border-primary transition-all duration-300 shadow-sm">
+                  <img
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    alt={cat.label}
+                    src={cat.image}
+                  />
                 </div>
+                <span className="text-[11px] font-bold text-text-primary tracking-wide">{cat.label}</span>
               </Link>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* ── SALONS GRID ── */}
-      <div style={{ backgroundColor: "#ffffff", paddingTop: 64, paddingBottom: 80, paddingLeft: 30, paddingRight: 30 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 700, color: "#02060c", letterSpacing: "-0.5px" }}>
-              {lat && lng ? "Salons Near You" : `Top Salons in ${selectedDistrict}`}
-            </h1>
-            <Link to="/explore" style={{
-              fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 14, fontWeight: 700,
-              color: "#111111", textDecoration: "none",
-              display: "flex", alignItems: "center", gap: 4,
-            }}>
-              View all &rarr;
-            </Link>
-          </div>
+        {/* Divider */}
+        <div className="h-px bg-border-light mx-5"></div>
+
+        {/* Partners list */}
+        <section className="py-6 px-5">
+          <h3 className="font-headline-md text-base text-text-primary mb-5">Salons for you</h3>
 
           {isLoading ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-              {[1, 2, 3].map((n) => (
-                <div key={n} style={{
-                  height: 320, borderRadius: 24, background: "#f5f7fa",
-                  animation: "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",
-                }} />
+            <div className="flex flex-col gap-6">
+              {[1, 2].map((n) => (
+                <div key={n} className="rounded-xl overflow-hidden bg-white border border-border-light">
+                  <div className="skeleton aspect-[16/9] w-full" />
+                  <div className="p-4 space-y-2">
+                    <div className="skeleton h-5 w-1/3" />
+                    <div className="skeleton h-4 w-1/2" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : shops.length === 0 ? (
-            <div style={{
-              border: "1.5px dashed #e4ebf3", borderRadius: 24, padding: "64px 32px",
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🏪</div>
-              <h3 style={{ fontWeight: 700, fontSize: 18, color: "#02060c", marginBottom: 8 }}>No partners listed yet</h3>
-              <p style={{ color: "rgba(2,6,12,0.5)", fontSize: 14 }}>
-                We haven't launched in this district yet. Try selecting Delhi.
-              </p>
+            <div className="border border-dashed border-outline-variant rounded-2xl p-12 text-center bg-white shadow-sm">
+              <span className="material-symbols-outlined text-4xl text-outline mb-2">storefront</span>
+              <p className="font-bold text-text-primary text-sm">No partners listed yet</p>
+              <p className="text-text-secondary text-xs mt-1">We haven't launched in this district yet. Try selecting Delhi.</p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+            <div className="flex flex-col gap-6">
               {shops.map((shop) => (
-                <Link key={shop.id} to={`/shop/${shop.slug}`} style={{ textDecoration: "none" }}>
-                  <div style={{
-                    background: "#ffffff", border: "1px solid #e4ebf3",
-                    borderRadius: 24, overflow: "hidden",
-                    transition: "all 0.2s ease", cursor: "pointer",
-                  }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.10)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                    }}
-                  >
-                    {/* Cover image */}
-                    <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden", background: "#f5f7fa" }}>
-                      {shop.coverImage ? (
-                        <img src={shop.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <div style={{
-                          width: "100%", height: "100%",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontFamily: "'Montserrat', Arial, sans-serif", fontWeight: 700,
-                          fontSize: 14, color: "rgba(2,6,12,0.3)",
-                        }}>
-                          ✂️ UniSalon Partner
-                        </div>
-                      )}
-                      {/* Rating badge */}
-                      <div style={{
-                        position: "absolute", bottom: 12, right: 12,
-                        background: "rgba(255,255,255,0.95)", borderRadius: 100,
-                        padding: "4px 10px", display: "flex", alignItems: "center", gap: 4,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
-                      }}>
-                        <Star size={12} style={{ color: "#f59e0b", fill: "#f59e0b" }} />
-                        <span style={{ fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 12, fontWeight: 700, color: "#02060c" }}>
-                          {shop.rating.toFixed(1)}
-                        </span>
-                        <span style={{ fontSize: 11, color: "rgba(2,6,12,0.4)" }}>({shop.totalReviews})</span>
+                <Link
+                  key={shop.id}
+                  to={`/shop/${shop.slug}`}
+                  className="group cursor-pointer block bg-white rounded-xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <div className="relative aspect-[21/9] w-full overflow-hidden">
+                    {shop.coverImage ? (
+                      <img
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                        alt={shop.name}
+                        src={shop.coverImage}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-surface-container text-text-secondary text-2xl">
+                        ✂️
                       </div>
+                    )}
+                    {/* Offer Tag Mockup overlay */}
+                    <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded text-primary font-bold text-[10px] tracking-wider uppercase border border-border-light/40">
+                      ₹200 OFF
                     </div>
+                  </div>
 
-                    {/* Info */}
-                    <div style={{ padding: "20px 20px 20px" }}>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#02060c", marginBottom: 4 }}>{shop.name}</h3>
-                      <span className="tag" style={{ marginBottom: 8, display: "inline-block" }}>{shop.category}</span>
-                      {shop.description && (
-                        <p style={{
-                          fontSize: 13, color: "rgba(2,6,12,0.55)", lineHeight: "1.5",
-                          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                          marginBottom: 12,
-                        }}>
-                          {shop.description}
-                        </p>
-                      )}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, borderTop: "1px solid #e4ebf3", paddingTop: 12 }}>
-                        <MapPin size={12} style={{ color: "rgba(2,6,12,0.35)", flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: "rgba(2,6,12,0.5)", fontWeight: 500 }}>
-                          {shop.city}, {shop.district}
-                        </span>
+                  <div className="p-4 flex justify-between items-start gap-4">
+                    <div className="min-w-0">
+                      <h4 className="font-headline-md text-base text-text-primary group-hover:text-secondary transition-colors truncate">
+                        {shop.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary font-medium">
+                        <div className="bg-rating-green text-white flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                          <span>{shop.rating.toFixed(1)}</span>
+                          <span className="material-symbols-outlined !text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                        </div>
+                        <span className="text-text-primary font-bold text-[11px]">• 25-30 mins</span>
                       </div>
+                      <p className="text-text-secondary text-xs mt-1 font-semibold uppercase tracking-wider text-secondary">
+                        {shop.category.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-text-secondary text-xs mt-0.5">
+                        {shop.city}, {shop.district} • 2.5 km
+                      </p>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
 
-      {/* ── FOOTER ── */}
-      <footer style={{
-        backgroundColor: "#f5f7fa", borderTop: "1px solid #e4ebf3",
-        padding: "40px 30px 24px",
-      }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Scissors size={18} color="#02060c" />
-            <span style={{ fontFamily: "'Montserrat', Arial, sans-serif", fontWeight: 900, fontSize: 16, color: "#02060c" }}>UniSalon</span>
-          </div>
-          <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy", "Terms & Conditions", "Help & Support"].map((link) => (
-              <a key={link} href="#" style={{
-                fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 14, fontWeight: 600,
-                color: "#02060c", textDecoration: "none",
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-              >
-                {link}
-              </a>
-            ))}
-          </div>
-          <p style={{ fontFamily: "'Montserrat', Arial, sans-serif", fontSize: 13, color: "rgba(2,6,12,0.45)" }}>
-            © {new Date().getFullYear()} UniSalon Inc.
-          </p>
-        </div>
-      </footer>
+      {/* ── PERSISTENT BOTTOM NAV BAR (MOBILE ONLY) ── */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border-light py-2 px-6 flex justify-around items-center shadow-lg sm:hidden">
+        <Link to="/" className="active-nav flex flex-col items-center gap-0.5 text-primary">
+          <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>explore</span>
+          <span className="text-[10px] font-bold">Explore</span>
+        </Link>
+        <Link to="/profile" className="flex flex-col items-center gap-0.5 text-text-secondary hover:text-primary">
+          <span className="material-symbols-outlined text-[22px]">event_note</span>
+          <span className="text-[10px] font-bold">Bookings</span>
+        </Link>
+        <Link to="/" className="flex flex-col items-center gap-0.5 text-text-secondary hover:text-primary">
+          <span className="material-symbols-outlined text-[22px]">local_offer</span>
+          <span className="text-[10px] font-bold">Offers</span>
+        </Link>
+        <Link to="/profile" className="flex flex-col items-center gap-0.5 text-text-secondary hover:text-primary">
+          <span className="material-symbols-outlined text-[22px]">person</span>
+          <span className="text-[10px] font-bold">Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }

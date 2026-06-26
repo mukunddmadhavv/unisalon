@@ -61,11 +61,36 @@ export const slotHoldRoutes = new Elysia({ prefix: "/api/slots" })
 
   // ── Check hold status + remaining seconds ──────────────────────────
   .get("/hold/:holdId", async ({ params, auth, set }) => {
-    const hold = await prisma.slotHold.findUnique({ where: { id: params.holdId } });
-    if (!hold || hold.userId !== auth.supabaseId) {
+    const hold = await prisma.slotHold.findUnique({
+      where: { id: params.holdId },
+      include: {
+        shop: {
+          select: {
+            name: true,
+            address: true,
+            city: true,
+          },
+        },
+      },
+    });
+    const user = await prisma.user.findUnique({
+      where: { supabaseId: auth.supabaseId },
+      select: { id: true },
+    });
+    if (!hold || !user || hold.userId !== user.id) {
       set.status = 404;
       return { success: false, error: "Hold not found" };
     }
+
+    const services = await prisma.service.findMany({
+      where: { id: { in: hold.serviceIds } },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        durationMins: true,
+      },
+    });
 
     const remainingSecs = Math.max(
       0,
@@ -76,6 +101,8 @@ export const slotHoldRoutes = new Elysia({ prefix: "/api/slots" })
     return {
       success: true,
       data: {
+        id: hold.id,
+        shopId: hold.shopId,
         holdId: hold.id,
         status: hold.status,
         remainingSecs,
@@ -83,6 +110,10 @@ export const slotHoldRoutes = new Elysia({ prefix: "/api/slots" })
         date: hold.date,
         startTime: hold.startTime,
         endTime: hold.endTime,
+        expiresAt: hold.expiresAt.toISOString(),
+        serviceIds: hold.serviceIds,
+        shop: hold.shop,
+        services,
       },
     };
   })

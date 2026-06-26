@@ -4,8 +4,15 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
-import { Clock, Calendar, ShieldCheck, Mail, Lock, Eye, EyeOff, IndianRupee, Scissors } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  durationMins: number;
+}
 
 interface SlotHoldDetail {
   id: string;
@@ -20,6 +27,7 @@ interface SlotHoldDetail {
     address: string;
     city: string;
   };
+  services: Service[];
 }
 
 export default function BookingConfirmPage() {
@@ -76,7 +84,8 @@ export default function BookingConfirmPage() {
     try {
       if (authMode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email,
+          password,
           options: { data: { name, role: "CUSTOMER" } },
         });
         if (error) throw error;
@@ -108,41 +117,46 @@ export default function BookingConfirmPage() {
 
   if (isHoldLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid #e4ebf3", borderTopColor: "#111", borderRadius: "50%" }} />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-9 h-9 border-3 border-border-light border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error || !hold) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 48, maxWidth: 400, textAlign: "center" }}>
-          <p style={{ fontWeight: 800, fontSize: 18, color: "#02060c", marginBottom: 8 }}>Slot Hold Expired</p>
-          <p style={{ fontSize: 14, color: "rgba(2,6,12,0.5)", marginBottom: 24 }}>Your lock time ran out or was released.</p>
-          <Link to="/" className="btn-primary">Back to Home</Link>
+      <div className="min-h-screen bg-background flex items-center justify-center p-5">
+        <div className="bg-white border border-border-light rounded-2xl p-10 max-w-sm text-center swiggy-shadow animate-fade-in">
+          <p className="font-bold text-xl text-primary mb-2">Slot Hold Expired</p>
+          <p className="text-text-secondary text-sm mb-6">Your slot lock time ran out or was released.</p>
+          <Link to="/" className="btn-primary w-full justify-center">
+            Back to Home
+          </Link>
         </div>
       </div>
     );
   }
 
+  // Calculate detailed bill breakdown
+  const itemTotal = (hold.services ?? []).reduce((sum, s) => sum + s.price, 0) / 100;
+  const discount = itemTotal > 0 ? 200 : 0; // Mock discount like Swiggy screenshot
+  const gst = itemTotal * 0.18; // 18% GST
+  const convenienceFee = itemTotal > 0 ? 29 : 0;
+  const totalToPay = Math.max(0, itemTotal - discount + gst + convenienceFee);
+
   if (confirmed) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'Montserrat', Arial, sans-serif" }}>
-        <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 28, padding: "48px 40px", maxWidth: 420, width: "100%", textAlign: "center" }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: "50%",
-            background: "#f0fdf4", border: "2px solid #86efac",
-            display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px",
-          }}>
-            <ShieldCheck size={36} style={{ color: "#16a34a" }} />
+      <div className="min-h-screen bg-background flex items-center justify-center p-5">
+        <div className="bg-white border border-border-light rounded-2xl p-10 max-w-md w-full text-center swiggy-shadow animate-fade-in">
+          <div className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center mx-auto mb-6">
+            <ShieldCheck size={32} className="text-rating-green" />
           </div>
-          <h2 style={{ fontSize: 26, fontWeight: 900, color: "#02060c", letterSpacing: "-0.5px", marginBottom: 12 }}>Booking Confirmed!</h2>
-          <p style={{ fontSize: 14, color: "rgba(2,6,12,0.55)", lineHeight: 1.6, marginBottom: 28 }}>
-            Your appointment at <strong>{hold.shop.name}</strong> has been confirmed. A confirmation email has been dispatched to your inbox.
+          <h2 className="font-display font-black text-2xl text-primary tracking-tight mb-2">Booking Confirmed!</h2>
+          <p className="text-xs text-text-secondary leading-relaxed mb-6">
+            Your appointment at <strong>{hold.shop.name}</strong> is confirmed. A receipt has been dispatched to your email.
           </p>
 
-          <div style={{ background: "#f5f7fa", border: "1px solid #e4ebf3", borderRadius: 16, padding: "16px 20px", textAlign: "left", marginBottom: 24 }}>
+          <div className="bg-surface border border-border-light rounded-xl p-4 text-left mb-6 space-y-2">
             {[
               ["Salon", hold.shop.name],
               ["Address", `${hold.shop.address}, ${hold.shop.city}`],
@@ -150,13 +164,13 @@ export default function BookingConfirmPage() {
               ["Time", `${hold.startTime} – ${hold.endTime}`],
               ["Payment", "Pay Cash at Shop"],
             ].map(([k, v]) => (
-              <div key={k} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(2,6,12,0.4)", minWidth: 72 }}>{k}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#02060c" }}>{v}</span>
+              <div key={k} className="flex gap-4 items-start text-xs">
+                <span className="font-bold text-text-secondary min-w-[70px]">{k}</span>
+                <span className="font-bold text-primary">{v}</span>
               </div>
             ))}
           </div>
-          <Link to="/profile" className="btn-primary" style={{ display: "block", width: "100%", textAlign: "center" }}>
+          <Link to="/profile" className="btn-primary w-full justify-center">
             View My Bookings
           </Link>
         </div>
@@ -165,152 +179,192 @@ export default function BookingConfirmPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f7fa", fontFamily: "'Montserrat', Arial, sans-serif" }}>
-      {/* Header */}
-      <header style={{ background: "#1a1a1a", padding: "0 30px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <Scissors size={20} color="#ffffff" />
-          <span style={{ fontWeight: 900, fontSize: 18, color: "#ffffff" }}>UniSalon</span>
-        </Link>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.4px", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
-          Booking Checkout
-        </span>
+    <div className="min-h-screen bg-white pb-28 font-body-md text-text-primary">
+      
+      {/* ── TOP APP BAR ── */}
+      <header className="bg-white sticky top-0 w-full z-50 flex justify-between items-center px-5 py-4 border-b border-border-light max-w-4xl mx-auto">
+        <div className="flex items-center gap-3">
+          <button className="p-1 hover:bg-surface-container rounded-full transition-colors" onClick={() => navigate(-1)}>
+            <span className="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+          </button>
+          <h1 className="font-headline-md text-lg text-primary">Secure Checkout</h1>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="material-symbols-outlined text-primary text-lg">help_outline</span>
+          <span className="text-xs font-bold text-text-secondary">Help</span>
+        </div>
       </header>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "40px 30px", display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }}>
-        {/* Left: Auth or Notes */}
-        <div>
+      <main className="max-w-4xl mx-auto pb-12 mt-4 px-5 grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        {/* Left Column: Auth Forms or Confirm Button */}
+        <div className="md:col-span-7 space-y-4">
           {!session ? (
-            <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 32 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#02060c", marginBottom: 6 }}>Sign In Required</h3>
-              <p style={{ fontSize: 13, color: "rgba(2,6,12,0.5)", fontWeight: 500, marginBottom: 24 }}>
+            <div className="bg-white border border-border-light rounded-xl p-6 swiggy-shadow">
+              <h3 className="font-headline-md text-base text-primary mb-1">Sign In Required</h3>
+              <p className="text-xs text-text-secondary font-medium mb-5">
                 Authenticate to link your details to this reservation.
               </p>
 
-              <form onSubmit={handleAuthSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
                 {authMode === "signup" && (
                   <div>
-                    <label className="label">Full Name</label>
-                    <input className="input" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Full Name</label>
+                    <input className="us-input !pl-4 !py-2.5 !text-xs border border-border-light hover:border-primary" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                 )}
                 <div>
-                  <label className="label">Email Address</label>
-                  <div style={{ position: "relative" }}>
-                    <Mail size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.3)" }} />
-                    <input className="input" style={{ paddingLeft: 40 }} placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Email Address</label>
+                  <div className="relative">
+                    <Mail size={13} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/60" />
+                    <input className="us-input !py-2.5 !text-xs border border-border-light hover:border-primary" placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div>
-                  <label className="label">Password</label>
-                  <div style={{ position: "relative" }}>
-                    <Lock size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(2,6,12,0.3)" }} />
-                    <input className="input" style={{ paddingLeft: 40, paddingRight: 44 }} placeholder="••••••••" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                    <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.3)" }}>
-                      {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Password</label>
+                  <div className="relative">
+                    <Lock size={13} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/60" />
+                    <input className="us-input !py-2.5 !text-xs border border-border-light hover:border-primary pr-10" placeholder="••••••••" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary/50">
+                      {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                   </div>
                 </div>
-                <button type="submit" disabled={authLoading} className="btn-primary" style={{ width: "100%", padding: "14px 28px" }}>
-                  {authMode === "login" ? "Sign In & Continue" : "Create Account & Continue"}
+                <button type="submit" disabled={authLoading} className="btn-primary w-full justify-center !py-3 !text-xs mt-2">
+                  {authLoading ? "Authenticating..." : authMode === "login" ? "Sign In & Continue" : "Create Account & Continue"}
                 </button>
               </form>
 
-              <p style={{ textAlign: "center", fontSize: 12, color: "rgba(2,6,12,0.45)", marginTop: 16 }}>
-                {authMode === "login" ? "No account? " : "Have one? "}
-                <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")} style={{ background: "none", border: "none", fontWeight: 800, fontSize: 12, color: "#111", cursor: "pointer", textDecoration: "underline" }}>
+              <p className="text-center text-xs text-text-secondary mt-5">
+                {authMode === "login" ? "No account? " : "Have an account? "}
+                <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")} className="font-black text-xs text-primary underline">
                   {authMode === "login" ? "Register" : "Sign in"}
                 </button>
               </p>
             </div>
           ) : (
-            <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 32 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#02060c", marginBottom: 6 }}>Reservation Details</h3>
-              <p style={{ fontSize: 13, color: "rgba(2,6,12,0.5)", fontWeight: 500, marginBottom: 24 }}>Optional notes for your stylist.</p>
+            <div className="bg-white border border-border-light rounded-xl p-6 swiggy-shadow space-y-4">
+              <h3 className="font-headline-md text-base text-primary mb-1">Reservation Details</h3>
+              <p className="text-xs text-text-secondary font-medium mb-4">Add optional requests or instructions for your stylist.</p>
 
-              <label className="label">Additional Notes (Optional)</label>
-              <textarea
-                className="input"
-                style={{ minHeight: 100, resize: "vertical", marginBottom: 20 }}
-                placeholder="e.g. Beard trim details, fading height..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Appointment Notes</label>
+                <textarea
+                  className="us-input !rounded-xl !pl-4 !py-3 !text-xs border border-border-light hover:border-primary min-h-[96px] resize-y"
+                  placeholder="e.g. Fading style height, specific clipper settings..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
 
               <button
                 onClick={() => confirmMutation.mutate()}
                 disabled={confirmMutation.isPending}
-                className="btn-primary"
-                style={{ width: "100%", padding: "14px 28px", fontSize: 15 }}
+                className="btn-primary w-full justify-center !py-3.5 !text-sm shadow-md"
               >
-                {confirmMutation.isPending ? "Confirming..." : "Confirm Booking — Pay Cash at Shop"}
+                {confirmMutation.isPending ? "Confirming..." : "Confirm Booking — Pay Cash at Shop ✨"}
               </button>
             </div>
           )}
+
+          {/* Cancellation Policy */}
+          <div className="bg-surface rounded-xl p-4 flex gap-3 border border-border-light">
+            <span className="material-symbols-outlined text-text-secondary text-lg">info</span>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Full refund if cancelled 2 hours before the slot. No refund or rescheduling permitted thereafter.
+            </p>
+          </div>
         </div>
 
-        {/* Right: Timer + Summary */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Countdown */}
-          <div style={{
-            background: "#111111", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 24, padding: 24, textAlign: "center",
-          }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 8 }}>
-              Slot Locked For
-            </p>
+        {/* Right Column: Timer & Bill Details */}
+        <div className="md:col-span-5 space-y-4">
+          
+          {/* Lock Countdown */}
+          <div className="bg-primary text-white rounded-xl p-5 text-center shadow-md">
+            <p className="text-[10px] font-bold tracking-wider uppercase text-white/60 mb-1">Slot Locked For</p>
             {timeLeft !== null && (
-              <div style={{
-                fontSize: 48, fontWeight: 900, letterSpacing: "-2px", fontFamily: "'Montserrat', Arial, sans-serif",
-                color: timeLeft <= 20 ? "#ef4444" : "#ffffff",
-              }}>
+              <div className={`font-display text-4xl font-extrabold tracking-tight ${timeLeft <= 20 ? "text-red-400" : "text-white"}`}>
                 {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
               </div>
             )}
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 8, fontWeight: 500 }}>
-              Confirm before expiry or the slot releases.
-            </p>
+            <p className="text-[10px] text-white/50 mt-1 font-semibold">Confirm before expiry to prevent automatic release.</p>
           </div>
 
-          {/* Summary card */}
-          <div style={{ background: "#fff", border: "1px solid #e4ebf3", borderRadius: 24, padding: 24 }}>
-            <h4 style={{ fontSize: 14, fontWeight: 800, color: "#02060c", marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #f0f0f0" }}>
-              Booking Summary
-            </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {[
-                ["Salon", hold.shop.name],
-                ["Address", `${hold.shop.address}, ${hold.shop.city}`],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(2,6,12,0.4)", marginBottom: 2 }}>{k}</p>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#02060c" }}>{v}</p>
-                </div>
-              ))}
+          {/* Detailed Bill Summary */}
+          <div className="bg-white border border-border-light rounded-xl p-5 swiggy-shadow">
+            <h4 className="font-headline-md text-sm text-primary mb-3">Booking Summary</h4>
+            
+            <div className="space-y-3 text-xs">
+              <div>
+                <p className="text-[9px] font-bold text-text-secondary uppercase">Salon</p>
+                <p className="font-bold text-primary mt-0.5">{hold.shop.name}</p>
+              </div>
 
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "rgba(2,6,12,0.4)", marginBottom: 6 }}>Schedule</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <Calendar size={13} style={{ color: "#111111" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#02060c" }}>{hold.date}</span>
+                <p className="text-[9px] font-bold text-text-secondary uppercase">Schedule</p>
+                <div className="flex items-center gap-1.5 mt-1 font-bold text-primary">
+                  <span className="material-symbols-outlined text-sm">calendar_today</span>
+                  <span>{hold.date}</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <Clock size={13} style={{ color: "#111111" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#02060c" }}>{hold.startTime} – {hold.endTime}</span>
+                <div className="flex items-center gap-1.5 mt-0.5 font-bold text-primary">
+                  <span className="material-symbols-outlined text-sm">schedule</span>
+                  <span>{hold.startTime} – {hold.endTime}</span>
                 </div>
               </div>
+            </div>
 
-              <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "rgba(2,6,12,0.45)", fontWeight: 600 }}>Payment</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <IndianRupee size={13} style={{ color: "#16a34a" }} />
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "#02060c" }}>Pay Cash</span>
-                </div>
+            {/* Dash border divider */}
+            <div className="dashed-divider my-4"></div>
+
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-3">Bill Details</h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center font-medium">
+                <span className="text-text-secondary">Item Total</span>
+                <span className="font-bold">₹{itemTotal.toFixed(2)}</span>
               </div>
+              <div className="flex justify-between items-center text-offer-text font-bold">
+                <span>Offer Discount (LUXE200)</span>
+                <span>-₹{discount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center font-medium">
+                <span className="text-text-secondary">GST &amp; Taxes (18%)</span>
+                <span>₹{gst.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center font-medium">
+                <span className="text-text-secondary">Convenience Fee</span>
+                <span>₹{convenienceFee.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <hr className="my-4 border-border-light" />
+
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-tight">Total to Pay</span>
+              <span className="font-headline-md text-base font-black text-primary">₹{totalToPay.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </main>
+
+      {/* ── STICKY BOTTOM PAYMENT BAR ── */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border-light px-5 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] md:px-16">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="font-headline-md text-lg font-black text-primary">
+              ₹{totalToPay.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-offer-text font-bold">View Detailed Bill</span>
+          </div>
+          <button
+            onClick={() => confirmMutation.mutate()}
+            disabled={confirmMutation.isPending || !session}
+            className="bg-primary text-on-primary font-bold text-xs px-6 py-3 rounded-lg flex items-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-md disabled:opacity-40"
+          >
+            {confirmMutation.isPending ? "Confirming..." : "Proceed to Book"}
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -16,9 +16,9 @@
   }
 
   body {
-    background-color: #ffffff;
-    color: #02060c;
-    font-family: 'Montserrat', Arial, sans-serif;
+    background-color: #f9f9fb;
+    color: #1a1c1d;
+    font-family: 'Inter', Arial, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -26,104 +26,127 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', Arial, sans-serif;
+    font-family: 'Lexend', Arial, sans-serif;
     font-weight: 700;
     line-height: 1.2;
-    color: #02060c;
+    color: #1a1c1d;
     margin: 0;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #f0f0f0; }
-  ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #111111; }
+  ::-webkit-scrollbar-track { background: #f3f3f5; }
+  ::-webkit-scrollbar-thumb { background: #e2e2e4; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b7122a; }
 }
 
 @layer components {
   .btn-primary {
     display: inline-flex; align-items: center; justify-content: center;
-    background-color: #111111; color: #ffffff;
-    font-family: 'Montserrat', Arial, sans-serif;
-    font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
-    padding: 12px 28px; border-radius: 15px; border: none;
+    @apply bg-primary text-white shadow-md shadow-primary/10;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 12px 28px; border-radius: 12px; border: none;
     cursor: pointer; transition: all 0.2s ease; text-decoration: none;
     white-space: nowrap;
   }
-  .btn-primary:hover { background-color: #333333; transform: translateY(-1px); }
+  .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
   .btn-primary:active { transform: scale(0.97); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   .btn-outline {
     display: inline-flex; align-items: center; justify-content: center;
-    background-color: transparent; color: #02060c;
-    font-family: 'Montserrat', Arial, sans-serif;
+    @apply bg-transparent text-on-background border border-outline-variant;
+    font-family: 'Inter', Arial, sans-serif;
     font-size: 14px; font-weight: 600;
-    padding: 11px 24px; border-radius: 15px; border: 1.5px solid #d0d0d0;
+    padding: 11px 24px; border-radius: 12px;
     cursor: pointer; transition: all 0.2s ease; text-decoration: none;
     white-space: nowrap;
   }
-  .btn-outline:hover { border-color: #111111; background-color: #f5f5f5; }
+  .btn-outline:hover { @apply border-primary bg-surface-container-low text-primary; }
   .btn-outline:active { transform: scale(0.97); }
 
   .btn-ghost {
     display: inline-flex; align-items: center; justify-content: center;
-    background-color: transparent; color: #555555;
-    font-family: 'Montserrat', Arial, sans-serif;
+    @apply bg-transparent text-on-surface-variant;
+    font-family: 'Inter', Arial, sans-serif;
     font-size: 14px; font-weight: 600;
-    padding: 8px 16px; border-radius: 10px; border: none;
+    padding: 8px 16px; border-radius: 8px; border: none;
     cursor: pointer; transition: all 0.15s ease; text-decoration: none;
   }
-  .btn-ghost:hover { background-color: #f0f0f0; color: #111111; }
+  .btn-ghost:hover { @apply bg-surface-container-low text-on-surface; }
 
   .card {
     background-color: #ffffff;
-    border: 1px solid #e4ebf3;
-    border-radius: 24px;
+    border: 1px solid #E0E0E5;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .bento-card {
+    background-color: #ffffff;
+    border: 1px solid #E0E0E5;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease-in-out;
+  }
+  .bento-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #E0E0E5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .vibrant-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .vibrant-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   }
 
   .input {
     display: block; width: 100%;
-    background-color: #ffffff; border: 1.5px solid #e4ebf3; border-radius: 12px;
+    background-color: #ffffff; border: 1.5px solid #e2e2e4; border-radius: 12px;
     padding: 12px 16px;
-    font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 500;
-    color: #02060c; outline: none; transition: border-color 0.2s ease;
+    font-family: 'Inter', Arial, sans-serif; font-size: 14px; font-weight: 500;
+    color: #1a1c1d; outline: none; transition: all 0.2s ease;
   }
-  .input::placeholder { color: rgba(2,6,12,0.35); }
-  .input:focus { border-color: #111111; }
+  .input::placeholder { color: rgba(26,28,29,0.35); }
+  .input:focus { border-color: #b7122a; @apply ring-4 ring-primary/10; }
 
   .label {
     display: block;
-    font-family: 'Montserrat', Arial, sans-serif;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-    color: rgba(2,6,12,0.5); margin-bottom: 6px;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+    color: rgba(26,28,29,0.6); margin-bottom: 6px;
   }
 
   .sidebar-link {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px; border-radius: 12px;
-    color: rgba(2,6,12,0.55);
-    font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 600;
+    padding: 12px 16px; border-radius: 8px;
+    color: #5b403f;
+    font-family: 'Inter', Arial, sans-serif; font-size: 14px; font-weight: 600;
     text-decoration: none; transition: all 0.15s ease;
   }
-  .sidebar-link:hover { background-color: #f5f5f5; color: #111111; }
+  .sidebar-link:hover { @apply bg-surface-container-high text-primary; }
   .sidebar-link.active {
-    background-color: #111111; color: #ffffff;
-  }
-
-  .section-dark {
-    background-color: #1a1a1a;
-    border-bottom-left-radius: 32px;
-    border-bottom-right-radius: 32px;
+    @apply bg-primary-container text-on-primary-container font-bold;
   }
 
   .tag {
     display: inline-flex; align-items: center;
     padding: 4px 12px; border-radius: 100px;
     font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-    background-color: #f0f0f0; color: #444; border: 1px solid #e0e0e0;
+    @apply bg-surface-container-low text-on-surface-variant border border-outline-variant;
   }
   .tag-dark {
-    background-color: #111111; color: #ffffff; border-color: #111111;
+    @apply bg-primary text-white border-primary;
   }
 }

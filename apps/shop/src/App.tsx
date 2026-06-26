@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { useAuthStore } from "./store/authStore";
 import { DashboardLayout } from "./components/DashboardLayout";
+import { api } from "./lib/api";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ShopSetupPage from "./pages/ShopSetupPage";
@@ -25,8 +26,19 @@ export default function App() {
   const { setSession } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
+    const handleSession = (session: any) => {
+      setSession(session);
+      if (session?.user) {
+        // Automatically sync/register shop owner record in public database
+        api.registerOwner({
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Owner",
+          phone: session.user.user_metadata?.phone || "0000000000",
+        }).catch((err) => console.error("Auto-registration error:", err));
+      }
+    };
+
+    supabase.auth.getSession().then(({ data }) => handleSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => handleSession(session));
     return () => subscription.unsubscribe();
   }, [setSession]);
 
