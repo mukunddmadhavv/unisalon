@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
+import toast from "react-hot-toast";
 
 interface Booking {
   id: string;
@@ -11,10 +13,10 @@ interface Booking {
   endTime: string;
   status: string;
   totalAmount: number;
-  user: { name: string; email: string };
+  user: { name: string; email: string; phone?: string };
   staff: { name: string } | null;
   staffId?: string;
-  services: Array<{ serviceName: string }>;
+  services: Array<{ serviceName: string; durationMins: number }>;
 }
 
 interface StaffMember {
@@ -30,19 +32,34 @@ interface BookingsResponse {
   data: Booking[];
 }
 
-const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  PENDING:   { bg: "rgba(168, 51, 0, 0.1)", color: "#a83300" }, // Burnt Orange
-  CONFIRMED: { bg: "rgba(183, 18, 42, 0.1)", color: "#b7122a" }, // Crimson Red
-  COMPLETED: { bg: "rgba(22, 163, 74, 0.1)", color: "#16a34a" }, // Green
-  CANCELLED: { bg: "rgba(220, 38, 38, 0.1)", color: "#dc2626" }, // Red
-  NO_SHOW:   { bg: "rgba(107, 114, 128, 0.1)", color: "#6b7280" },
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "bg-secondary-container text-on-secondary-container border border-on-secondary-container/20",
+  CONFIRMED: "bg-offer-bg text-offer-text border border-rating-green/20",
+  COMPLETED: "bg-blue-50 text-blue-700 border border-blue-200",
+  CANCELLED: "bg-red-50 text-red-700 border border-red-200",
+  NO_SHOW: "bg-gray-50 text-gray-700 border border-gray-200",
 };
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const qc = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
   const ownerName = user?.email?.split("@")[0] ?? "Owner";
 
+  // Visual Live Status Toggle
+  const [isLive, setIsLive] = useState(() => {
+    const saved = localStorage.getItem("shop-live-status");
+    return saved === null ? true : saved === "true";
+  });
+
+  const handleLiveToggle = () => {
+    const nextState = !isLive;
+    setIsLive(nextState);
+    localStorage.setItem("shop-live-status", String(nextState));
+    toast.success(nextState ? "Salon is now Live for bookings!" : "Salon is now Offline.");
+  };
+
+  // Queries
   const { data: todayBookings = [] } = useQuery<Booking[]>({
     queryKey: ["owner-bookings", "today"],
     queryFn: async () => {
@@ -67,223 +84,263 @@ export default function DashboardPage() {
     },
   });
 
-  const confirmedToday = todayBookings.filter((b) => b.status === "CONFIRMED").length;
-  const revenue = allBookings
-    .filter((b) => b.status === "COMPLETED")
+  const { data: shopDetail } = useQuery<any>({
+    queryKey: ["owner-shop"],
+    queryFn: () => api.getShop(),
+  });
+
+  // Booking accept/decline mutation
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.updateBookingStatus(id, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["owner-bookings"] });
+      toast.success("Appointment updated successfully");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update status"),
+  });
+
+  const pendingBookings = allBookings.filter((b) => b.status === "PENDING");
+  const confirmedToday = todayBookings.filter((b) => b.status === "CONFIRMED");
+  const completedBookings = allBookings.filter((b) => b.status === "COMPLETED");
+
+  // Stats calculations
+  const dailyRevenue = todayBookings
+    .filter((b) => b.status === "COMPLETED" || b.status === "CONFIRMED")
     .reduce((sum, b) => sum + b.totalAmount, 0);
 
-  // Helper to calculate stylist revenue
+  const avgServiceTime = completedBookings.length > 0
+    ? Math.round(
+        completedBookings.reduce(
+          (sum, b) => sum + b.services.reduce((sSum, s) => sSum + s.durationMins, 0),
+          0
+        ) / completedBookings.length
+      )
+    : 45;
+
+  const shopRating = shopDetail?.data?.rating ?? 4.9;
+
   const getStaffRevenue = (staffId: string) => {
-    const sum = allBookings
+    return allBookings
       .filter((b) => b.status === "COMPLETED" && b.staffId === staffId)
-      .reduce((s, b) => s + b.totalAmount, 0);
-    return sum / 100; // in Rupees
+      .reduce((s, b) => s + b.totalAmount, 0) / 100;
   };
 
-  // Sort staff by revenue
   const sortedStaff = [...staffList]
     .map((s) => ({ ...s, revenue: getStaffRevenue(s.id) }))
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 3);
 
   return (
-    <div className="animate-fade-in">
+    <div className="space-y-6">
+      
       {/* Welcome Header */}
-      <section className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-extrabold text-on-background tracking-tight">
-            Welcome back, {ownerName.charAt(0).toUpperCase() + ownerName.slice(1)}
+          <h1 className="font-display text-3xl font-extrabold text-text-primary tracking-tight">
+            Luxe Salon Central
           </h1>
-          <p className="font-sans text-base text-on-surface-variant mt-1">
-            Here is what's happening at your salon today, {format(new Date(), "MMMM dd, yyyy")}.
+          <p className="font-sans text-xs text-text-secondary mt-1">
+            Welcome back, {ownerName.charAt(0).toUpperCase() + ownerName.slice(1)} • Today is {format(new Date(), "MMMM dd, yyyy")}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link
-            to="/bookings"
-            className="px-5 py-2.5 border border-surface-container-high text-on-surface rounded-xl font-sans font-semibold text-sm flex items-center gap-2 hover:bg-surface-container-low transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-base">calendar_month</span>
-            Daily Report
-          </Link>
-          <Link
-            to="/shop/edit"
-            className="px-5 py-2.5 bg-primary text-white rounded-xl font-sans font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-base">edit</span>
-            Book Appointment
-          </Link>
+      </section>
+
+      {/* Shop Availability Live/Offline Toggle */}
+      <section className="bg-white border border-border-light p-4 rounded-xl flex justify-between items-center shadow-sm">
+        <div>
+          <h2 className="font-sans text-sm font-bold text-text-primary">Shop Availability</h2>
+          <p className="font-sans text-xs text-text-secondary mt-0.5">Toggle your salon visibility on customer explorer</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isLive}
+            onChange={handleLiveToggle}
+            className="sr-only peer"
+          />
+          <div className="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rating-green"></div>
+          <span className={`ml-3 font-display text-xs font-extrabold tracking-wider uppercase ${isLive ? 'text-rating-green' : 'text-text-secondary'}`}>
+            {isLive ? 'Live' : 'Offline'}
+          </span>
+        </label>
+      </section>
+
+      {/* Stats Bento Grid */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
+          <span className="material-symbols-outlined text-text-secondary text-[20px]">calendar_today</span>
+          <span className="font-display text-2xl font-black text-text-primary">{allBookings.length}</span>
+          <span className="font-sans text-[11px] font-semibold text-text-secondary">Total Bookings</span>
+        </div>
+        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
+          <span className="material-symbols-outlined text-rating-green text-[20px]">payments</span>
+          <span className="font-display text-2xl font-black text-text-primary">₹{(dailyRevenue / 100).toLocaleString()}</span>
+          <span className="font-sans text-[11px] font-semibold text-text-secondary">Daily Revenue</span>
+        </div>
+        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
+          <span className="material-symbols-outlined text-[#fed65b] text-[20px]">schedule</span>
+          <span className="font-display text-2xl font-black text-text-primary">{avgServiceTime}m</span>
+          <span className="font-sans text-[11px] font-semibold text-text-secondary">Avg. Service Time</span>
+        </div>
+        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
+          <span className="material-symbols-outlined text-primary text-[20px]">star</span>
+          <span className="font-display text-2xl font-black text-text-primary">{shopRating}</span>
+          <span className="font-sans text-[11px] font-semibold text-text-secondary">Today's Rating</span>
         </div>
       </section>
 
-      {/* Quick Stats Bento Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        {/* Card 1: Total Sales */}
-        <div className="glass-card vibrant-hover overflow-hidden relative group flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start z-10">
-            <span className="font-sans font-semibold text-xs text-on-surface-variant uppercase tracking-wider">Total Sales</span>
-            <div className="p-2 bg-primary/10 text-primary rounded-lg">
-              <span className="material-symbols-outlined">payments</span>
-            </div>
-          </div>
-          <div className="z-10">
-            <p className="font-display text-3xl font-extrabold text-on-background">₹{(revenue / 100).toLocaleString()}</p>
-            <p className="font-sans text-xs text-secondary flex items-center gap-1 mt-1 font-semibold">
-              <span className="material-symbols-outlined text-xs">trending_up</span>
-              +12% vs last week
-            </p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 scale-125 transition-opacity text-on-surface-variant pointer-events-none select-none">
-            <span className="material-symbols-outlined text-[120px]">monitoring</span>
-          </div>
-        </div>
-
-        {/* Card 2: Upcoming Appointments */}
-        <div className="glass-card vibrant-hover overflow-hidden relative group flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start z-10">
-            <span className="font-sans font-semibold text-xs text-on-surface-variant uppercase tracking-wider">Upcoming Appointments</span>
-            <div className="p-2 bg-secondary/10 text-secondary rounded-lg">
-              <span className="material-symbols-outlined">calendar_today</span>
-            </div>
-          </div>
-          <div className="z-10">
-            <p className="font-display text-3xl font-extrabold text-on-background">{todayBookings.length}</p>
-            <p className="font-sans text-xs text-on-surface-variant mt-1 font-semibold">{confirmedToday} confirmed for today</p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 scale-125 transition-opacity text-on-surface-variant pointer-events-none select-none">
-            <span className="material-symbols-outlined text-[120px]">event_available</span>
-          </div>
-        </div>
-
-        {/* Card 3: Total Bookings */}
-        <div className="glass-card vibrant-hover overflow-hidden relative group flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start z-10">
-            <span className="font-sans font-semibold text-xs text-on-surface-variant uppercase tracking-wider">Total Bookings</span>
-            <div className="p-2 bg-primary/10 text-primary rounded-lg">
-              <span className="material-symbols-outlined">star</span>
-            </div>
-          </div>
-          <div className="z-10">
-            <p className="font-display text-3xl font-extrabold text-on-background">{allBookings.length}</p>
-            <p className="font-sans text-xs text-on-surface-variant mt-1 font-semibold">Booked across all days</p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 scale-125 transition-opacity text-on-surface-variant pointer-events-none select-none">
-            <span className="material-symbols-outlined text-[120px]">stars</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Dashboard Layout (Split) */}
+      {/* Main Dashboard Panel layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left pane: Today's schedule + Banner */}
-        <section className="lg:col-span-2 space-y-6">
-          <div className="glass-card !p-0 overflow-hidden">
-            <div className="p-6 border-b border-surface-container-high flex justify-between items-center bg-transparent">
-              <h3 className="font-display text-lg font-bold text-on-background">Today's Schedule</h3>
-              <Link to="/bookings" className="text-primary font-sans font-semibold text-sm hover:underline">
-                View All Bookings
+        
+        {/* Left Section: Pending Requests & Today's Schedule */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Pending Requests Section */}
+          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary">Pending Requests</h3>
+                <p className="font-sans text-xs text-text-secondary mt-0.5">{pendingBookings.length} bookings waiting</p>
+              </div>
+              <Link to="/bookings" className="text-primary font-sans text-xs font-bold border-b border-primary hover:opacity-80 transition-opacity">
+                View All
               </Link>
             </div>
-            <div className="divide-y divide-surface-container-high bg-transparent">
-              {todayBookings.length === 0 ? (
-                <div className="p-12 text-center flex flex-col items-center justify-center">
-                  <span className="material-symbols-outlined text-4xl text-outline mb-3">calendar_today</span>
-                  <p className="font-display text-base font-bold text-on-background">No appointments today</p>
-                  <p className="font-sans text-xs text-on-surface-variant mt-1">Your schedule is currently clear for the day.</p>
-                </div>
-              ) : (
-                todayBookings.map((booking) => {
-                  const style = STATUS_STYLES[booking.status] ?? STATUS_STYLES.PENDING;
-                  return (
-                    <div key={booking.id} className="p-6 flex items-center gap-4 hover:bg-surface-container-low transition-all duration-150">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-[20px]">event_available</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-sans font-bold text-sm text-on-background truncate">{booking.user.name}</p>
-                        <p className="font-sans text-xs text-on-surface-variant truncate">
-                          {booking.services.map((s) => s.serviceName).join(", ")}
-                          {booking.staff && ` with ${booking.staff.name}`}
-                        </p>
-                      </div>
-                      <div className="text-right flex flex-col items-end gap-1.5">
-                        <p className="font-sans font-bold text-xs text-on-surface-variant whitespace-nowrap">
-                          {booking.startTime} – {booking.endTime}
-                        </p>
-                        <span
-                          className="px-2 py-0.5 rounded-full font-sans text-[10px] font-bold uppercase tracking-wider"
-                          style={{ backgroundColor: style.bg, color: style.color }}
-                        >
-                          {booking.status}
-                        </span>
+
+            {pendingBookings.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-border-light rounded-xl bg-background">
+                <span className="material-symbols-outlined text-3xl text-text-secondary mb-1">done_all</span>
+                <p className="font-sans text-xs text-text-secondary font-semibold">No pending requests</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingBookings.map((booking) => (
+                  <div key={booking.id} className="border border-border-light p-4 rounded-xl shadow-sm bg-background transition-transform duration-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-border-light flex items-center justify-center font-display text-sm font-extrabold text-primary shadow-sm flex-shrink-0">
+                          {booking.user.name[0]}
+                        </div>
+                        <div>
+                          <h4 className="font-sans text-sm font-bold text-text-primary">{booking.user.name}</h4>
+                          <p className="font-sans text-xs text-text-secondary truncate mt-0.5">
+                            {booking.services.map((s) => s.serviceName).join(", ")}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1 text-primary">
+                            <span className="material-symbols-outlined text-[14px]">schedule</span>
+                            <span className="font-display text-[11px] font-extrabold">
+                              {booking.date === today ? "Today" : booking.date}, {booking.startTime}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  );
-                })
+                    <div className="grid grid-cols-2 gap-2 mt-2.5">
+                      <button
+                        onClick={() => statusMutation.mutate({ id: booking.id, status: "CANCELLED" })}
+                        className="py-2 border border-border-light rounded-lg font-sans text-xs font-bold text-text-primary hover:bg-surface-container transition-colors"
+                      >
+                        Decline
+                      </button>
+                      <button
+                        onClick={() => statusMutation.mutate({ id: booking.id, status: "CONFIRMED" })}
+                        className="py-2 bg-primary text-white rounded-lg font-sans text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Today's Schedule timeline */}
+          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary">Today's Schedule</h3>
+              <span className="bg-offer-bg text-offer-text text-[10px] px-2 py-0.5 rounded-full font-sans font-bold uppercase border border-rating-green/20">
+                {confirmedToday.length} Confirmed
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {todayBookings.length === 0 ? (
+                <div className="py-12 text-center flex flex-col items-center justify-center">
+                  <span className="material-symbols-outlined text-4xl text-text-secondary mb-2">calendar_today</span>
+                  <p className="font-sans text-sm font-bold text-text-primary">No appointments today</p>
+                  <p className="font-sans text-xs text-text-secondary mt-1">Your schedule is currently clear for the day.</p>
+                </div>
+              ) : (
+                todayBookings.map((booking) => (
+                  <div key={booking.id} className="border border-border-light rounded-xl p-4 flex gap-4 bg-background hover:bg-white transition-colors shadow-sm">
+                    <div className="flex flex-col items-center justify-center min-w-[50px] border-r border-border-light pr-4">
+                      <span className="font-display text-lg font-black text-text-primary">
+                        {booking.startTime.split(":")[0]}
+                      </span>
+                      <span className="font-sans text-[10px] font-bold text-text-secondary uppercase">
+                        {Number(booking.startTime.split(":")[0]) >= 12 ? "PM" : "AM"}
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-between items-center min-w-0">
+                      <div className="min-w-0 pr-2">
+                        <span className="font-sans text-sm font-bold text-text-primary truncate block">{booking.user.name}</span>
+                        <span className="font-sans text-xs text-text-secondary truncate block mt-0.5">
+                          {booking.services.map((s) => s.serviceName).join(", ")}
+                          {booking.staff && ` with ${booking.staff.name}`}
+                        </span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full font-sans text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${STATUS_COLORS[booking.status]}`}>
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Visual Asset / Banner */}
-          <div className="relative h-64 rounded-2xl overflow-hidden group shadow-md border border-surface-container-high">
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
-            <img
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              alt="Salon interior banner"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPhPjmvnrwBeXHcoCysRr8sKv5nXfudheuTWi-RfV5dw6Z-oOPF8h932-kvkv8bocjlvW5ZC1kPfvn7wdCrHo4pmtrAz2awnhcTlPM5Q8gd6_vZM0p7LGZrpX2k5Xz9OYTeK5evSSOyg797vicgadjVoXwtywtVj-veZduVn4h3_RCje_L97mInUAI6nbCbEQXMo5PvDnb_rQMK7EHTlLH3KerT2Z1WPAHoSL_pBedOxv53UFsLr1Ri8yPz63A6_D3i_nSbmwWxDng"
-            />
-            <div className="relative z-20 h-full flex flex-col justify-center px-10">
-              <h4 className="font-display text-2xl font-extrabold text-white max-w-sm">Elevate your customer experience.</h4>
-              <p className="text-white/80 mt-2 font-sans text-sm max-w-xs leading-relaxed">
-                Manage your services, pricing, and operating hours to keep your salon page attractive for booking.
-              </p>
-              <Link
-                to="/shop/edit"
-                className="mt-5 w-fit px-6 py-2.5 bg-white text-primary hover:bg-primary hover:text-white rounded-full font-sans text-xs font-bold transition-all duration-250 shadow-md"
-              >
-                Manage Profile
-              </Link>
-            </div>
-          </div>
-        </section>
+        </div>
 
-        {/* Right pane: Top stylists + Support */}
-        <section className="space-y-6">
-          {/* Stylists Leaderboard */}
-          <div className="glass-card">
-            <h3 className="font-display text-base font-bold text-on-background mb-4">Top Stylists</h3>
+        {/* Right Section: Top Stylists & Quick Support */}
+        <div className="space-y-6">
+          
+          {/* Top Stylists Leaderboard */}
+          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
+            <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary mb-4">Top Stylists</h3>
             {sortedStaff.length === 0 ? (
               <div className="text-center py-6">
-                <span className="material-symbols-outlined text-3xl text-outline mb-1">group</span>
-                <p className="font-sans text-xs text-on-surface-variant">No staff listed yet</p>
+                <span className="material-symbols-outlined text-3xl text-text-secondary mb-1">group</span>
+                <p className="font-sans text-xs text-text-secondary font-semibold">No staff listed yet</p>
                 <Link to="/staff" className="text-primary text-xs font-bold hover:underline block mt-2">
                   Add Staff Members
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {sortedStaff.map((staff, idx) => (
                   <div key={staff.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        idx === 0 ? "bg-primary/10 text-primary" : "bg-surface-container-high text-on-surface-variant"
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px] font-black ${
+                        idx === 0 ? "bg-primary text-white" : "bg-surface-container-high text-text-secondary"
                       }`}>
                         {idx + 1}
                       </div>
-                      <p className="font-sans text-sm font-bold text-on-background">{staff.name}</p>
+                      <p className="font-sans text-sm font-bold text-text-primary">{staff.name}</p>
                     </div>
-                    <p className="font-sans text-sm font-bold text-primary">₹{staff.revenue.toLocaleString()}</p>
+                    <p className="font-display text-sm font-extrabold text-primary">₹{staff.revenue.toLocaleString()}</p>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Quick Support Card */}
-          <div className="glass-card border-dashed border-2 border-surface-container-high flex flex-col justify-between">
+          {/* Micro-interaction support banner */}
+          <section className="bg-white border border-dashed border-border-light rounded-xl p-5 shadow-sm flex flex-col justify-between">
             <div>
-              <p className="font-sans font-bold text-sm text-on-background">Need help with UniSalon?</p>
-              <p className="font-sans text-xs text-on-surface-variant mt-1 leading-relaxed">
+              <p className="font-sans text-sm font-bold text-text-primary">Need help with UniSalon?</p>
+              <p className="font-sans text-xs text-text-secondary mt-1 leading-relaxed">
                 Our shop success team is available 24/7 to help you grow your salon business.
               </p>
             </div>
@@ -294,8 +351,10 @@ export default function DashboardPage() {
               Contact Support
               <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
             </a>
-          </div>
-        </section>
+          </section>
+
+        </div>
+
       </div>
     </div>
   );

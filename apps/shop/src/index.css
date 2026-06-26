@@ -16,9 +16,9 @@
   }
 
   body {
-    background-color: #f9f9fb;
-    color: #1a1c1d;
-    font-family: 'Inter', Arial, sans-serif;
+    background-color: #fcf8f9;
+    color: #02060C;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -26,24 +26,24 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lexend', Arial, sans-serif;
-    font-weight: 700;
+    font-family: 'Metrophobic', Arial, sans-serif;
+    font-weight: 800;
     line-height: 1.2;
-    color: #1a1c1d;
+    color: #02060C;
     margin: 0;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #f3f3f5; }
-  ::-webkit-scrollbar-thumb { background: #e2e2e4; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #b7122a; }
+  ::-webkit-scrollbar-track { background: #f6f3f3; }
+  ::-webkit-scrollbar-thumb { background: #e5e2e2; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #02060C; }
 }
 
 @layer components {
   .btn-primary {
     display: inline-flex; align-items: center; justify-content: center;
     @apply bg-primary text-white shadow-md shadow-primary/10;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     font-size: 14px; font-weight: 600;
     padding: 12px 28px; border-radius: 12px; border: none;
     cursor: pointer; transition: all 0.2s ease; text-decoration: none;
@@ -56,7 +56,7 @@
   .btn-outline {
     display: inline-flex; align-items: center; justify-content: center;
     @apply bg-transparent text-on-background border border-outline-variant;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     font-size: 14px; font-weight: 600;
     padding: 11px 24px; border-radius: 12px;
     cursor: pointer; transition: all 0.2s ease; text-decoration: none;
@@ -68,7 +68,7 @@
   .btn-ghost {
     display: inline-flex; align-items: center; justify-content: center;
     @apply bg-transparent text-on-surface-variant;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     font-size: 14px; font-weight: 600;
     padding: 8px 16px; border-radius: 8px; border: none;
     cursor: pointer; transition: all 0.15s ease; text-decoration: none;
@@ -77,28 +77,27 @@
 
   .card {
     background-color: #ffffff;
-    border: 1px solid #E0E0E5;
+    border: 1px solid #F0F0F0;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
   .bento-card {
     background-color: #ffffff;
-    border: 1px solid #E0E0E5;
+    border: 1px solid #F0F0F0;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: all 0.2s ease-in-out;
   }
   .bento-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid #E0E0E5;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #F0F0F0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     border-radius: 16px;
     padding: 24px;
   }
@@ -108,31 +107,31 @@
   }
   .vibrant-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
   }
 
   .input {
     display: block; width: 100%;
-    background-color: #ffffff; border: 1.5px solid #e2e2e4; border-radius: 12px;
+    background-color: #ffffff; border: 1.5px solid #F0F0F0; border-radius: 12px;
     padding: 12px 16px;
-    font-family: 'Inter', Arial, sans-serif; font-size: 14px; font-weight: 500;
-    color: #1a1c1d; outline: none; transition: all 0.2s ease;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif; font-size: 14px; font-weight: 500;
+    color: #02060C; outline: none; transition: all 0.2s ease;
   }
-  .input::placeholder { color: rgba(26,28,29,0.35); }
-  .input:focus { border-color: #b7122a; @apply ring-4 ring-primary/10; }
+  .input::placeholder { color: rgba(2,6,12,0.35); }
+  .input:focus { border-color: #02060C; @apply ring-4 ring-primary/10; }
 
   .label {
     display: block;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif;
     font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
-    color: rgba(26,28,29,0.6); margin-bottom: 6px;
+    color: rgba(2,6,12,0.6); margin-bottom: 6px;
   }
 
   .sidebar-link {
     display: flex; align-items: center; gap: 12px;
     padding: 12px 16px; border-radius: 8px;
-    color: #5b403f;
-    font-family: 'Inter', Arial, sans-serif; font-size: 14px; font-weight: 600;
+    color: #686B78;
+    font-family: 'Be Vietnam Pro', Arial, sans-serif; font-size: 14px; font-weight: 600;
     text-decoration: none; transition: all 0.15s ease;
   }
   .sidebar-link:hover { @apply bg-surface-container-high text-primary; }

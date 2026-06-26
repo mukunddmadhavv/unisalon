@@ -278,6 +278,8 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         category: t.String(),
         price: t.Number(),
         durationMins: t.Number(),
+        imageUrl: t.Optional(t.String()),
+        isActive: t.Optional(t.Boolean()),
       }),
     }
   )
@@ -292,14 +294,22 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
 
       const updated = await prisma.service.update({
         where: { id: params.id },
-        data: body,
+        data: {
+          ...body,
+          category: body.category ? body.category as ServiceCategory : undefined,
+        },
       });
       return { success: true, data: updated };
     },
     {
       body: t.Partial(t.Object({
-        name: t.String(), price: t.Number(),
-        durationMins: t.Number(), isActive: t.Boolean(),
+        name: t.String(),
+        price: t.Number(),
+        durationMins: t.Number(),
+        isActive: t.Boolean(),
+        description: t.String(),
+        category: t.String(),
+        imageUrl: t.String(),
       })),
     }
   )
