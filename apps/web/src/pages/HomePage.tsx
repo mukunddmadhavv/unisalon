@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuth, UserButton } from "@clerk/react";
-import { Navigation, Compass } from "lucide-react";
+import { Navigation, Compass, Search } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Shop {
@@ -275,17 +275,15 @@ export default function HomePage() {
 
             {/* Search Input Box (Flexible width, takes up remaining space) */}
             <div className="flex-1 min-w-0 max-w-xl ml-4 sm:ml-6 md:ml-10 w-full mr-auto">
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] hover:bg-white border border-transparent hover:border-primary rounded-lg px-3 py-1.5 md:py-2.5 transition-colors duration-200">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] hover:bg-white border border-transparent hover:border-primary rounded-lg px-3 py-1.5 md:py-2 transition-colors duration-200">
+                <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-text-secondary mr-2 shrink-0" strokeWidth={2.5} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
-                  className="w-full border-none p-0 bg-transparent text-[11px] md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none truncate pr-6"
+                  className="w-full border-none p-0 bg-transparent text-[11px] md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none truncate"
                 />
-                <button type="submit" className="absolute right-3 text-text-secondary flex items-center">
-                  <span className="material-symbols-outlined text-[16px] md:text-[18px]">search</span>
-                </button>
               </form>
             </div>
 
