@@ -301,44 +301,46 @@ export default function HomePage() {
         </header>
 
         {/* ── SUB-HEADER LOCATION BAR (Flipkart/Zepto style) ── */}
-        <div className="bg-white border-b border-border-light py-2.5 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-text-primary">
-              <span className="material-symbols-outlined text-primary text-[18px] shrink-0">location_on</span>
-              <span className="text-text-secondary font-medium">Browsing salons in</span>
-              <div className="flex items-center gap-1 font-bold text-primary">
-                {lat && lng ? (
-                  <button
-                    type="button"
-                    onClick={requestLocation}
-                    className="flex items-center gap-1 hover:opacity-85 text-left font-extrabold text-xs"
-                  >
-                    <Navigation size={10} className="fill-primary" />
-                    Nearby (GPS)
-                  </button>
-                ) : (
-                  <div className="relative flex items-center">
-                    <select
-                      value={selectedDistrict}
-                      onChange={handleDistrictChange}
-                      className="appearance-none pr-5 bg-transparent font-extrabold text-xs text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+        <div className="bg-background py-3 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white border border-border-light rounded-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm hover:border-primary transition-all duration-200">
+              <div className="flex items-center gap-2 text-text-primary">
+                <span className="material-symbols-outlined text-primary text-[18px] shrink-0">location_on</span>
+                <span className="text-text-secondary font-medium">Browsing salons in</span>
+                <div className="flex items-center gap-1 font-bold text-primary">
+                  {lat && lng ? (
+                    <button
+                      type="button"
+                      onClick={requestLocation}
+                      className="flex items-center gap-1 hover:opacity-85 text-left font-extrabold text-xs"
                     >
-                      {districts.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    <span className="material-symbols-outlined text-[14px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
-                  </div>
-                )}
+                      <Navigation size={10} className="fill-primary" />
+                      Nearby (GPS)
+                    </button>
+                  ) : (
+                    <div className="relative flex items-center">
+                      <select
+                        value={selectedDistrict}
+                        onChange={handleDistrictChange}
+                        className="appearance-none pr-5 bg-transparent font-extrabold text-xs text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+                      >
+                        {districts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <span className="material-symbols-outlined text-[14px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => setShowDistrictSelector(true)}
-              className="text-[10px] font-bold text-black uppercase tracking-wider hover:underline"
-            >
-              Change Location
-            </button>
+              <button
+                onClick={() => setShowDistrictSelector(true)}
+                className="text-[10px] font-bold text-black uppercase tracking-wider hover:underline"
+              >
+                Change Location
+              </button>
+            </div>
           </div>
         </div>
 
