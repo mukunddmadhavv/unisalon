@@ -43,12 +43,12 @@ export default function HomePage() {
     localStorage.getItem("user-district") ?? "Delhi"
   );
 
-  const { data: districts = [] } = useQuery<string[]>({
+  const { data: districts = [], error: districtsError } = useQuery<string[]>({
     queryKey: ["districts"],
     queryFn: () => api.getDistricts(),
   });
 
-  const { data: shopsResponse, isLoading } = useQuery<{ shops: Shop[]; total: number }>({
+  const { data: shopsResponse, isLoading, error: shopsError } = useQuery<{ shops: Shop[]; total: number }>({
     queryKey: ["shops-landing", lat, lng, selectedDistrict, sortBy],
     queryFn: () =>
       api.getShops({
@@ -124,6 +124,17 @@ export default function HomePage() {
   };
 
   const shops = shopsResponse?.shops ?? [];
+
+  console.log("UniSalon Diagnostics:", {
+    lat,
+    lng,
+    district: selectedDistrict,
+    isLoadingShops: isLoading,
+    shopsCount: shops.length,
+    districts,
+    districtsError,
+    shopsError,
+  });
 
   const isLocationPending = !lat && !lng && !localStorage.getItem("user-district") && !geoError && !showDistrictSelector;
   const isFallbackRequired = showDistrictSelector || geoError || (lat && lng && !isLoading && shops.length === 0);
