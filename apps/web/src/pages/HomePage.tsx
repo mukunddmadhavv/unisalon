@@ -269,7 +269,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-3.5 flex items-center justify-between gap-2.5 sm:gap-4 w-full">
             
             {/* Logo */}
-            <Link to="/" className="font-headline-md text-sm sm:text-lg md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black shrink-0">
+            <Link to="/" className="font-headline-md text-base sm:text-xl md:text-3xl text-primary tracking-tighter hover:opacity-85 font-black shrink-0">
               UNISALON
             </Link>
 
