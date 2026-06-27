@@ -17,8 +17,17 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 export const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─────────────────────────────────────────────
-// JWT Verification helper
+// JWT Verification helper (Clerk)
 // ─────────────────────────────────────────────
+
+import { verifyToken as clerkVerifyToken, createClerkClient } from "@clerk/backend";
+
+const clerkSecretKey = process.env.CLERK_SECRET_KEY!;
+if (!clerkSecretKey) {
+  throw new Error("Missing CLERK_SECRET_KEY environment variable");
+}
+
+export const clerkClient = createClerkClient({ secretKey: clerkSecretKey });
 
 export type AuthUser = {
   supabaseId: string;
@@ -27,70 +36,90 @@ export type AuthUser = {
 };
 
 /**
- * Verify Supabase JWT and look up user role from DB
+ * Verify Clerk JWT and look up user role from DB
  */
 export async function verifyToken(token: string): Promise<AuthUser | null> {
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) return null;
+  try {
+    const payload = await clerkVerifyToken(token, {
+      secretKey: clerkSecretKey,
+    });
+    if (!payload || !payload.sub) return null;
 
-  const { prisma } = await import("@unisalon/db");
+    const userId = payload.sub;
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim());
-  const isAdmin = adminEmails.includes(data.user.email ?? "");
+    const { prisma } = await import("@unisalon/db");
 
-  // Check shop owner or auto-create if owner metadata exists
-  let owner = await prisma.shopOwner.findUnique({
-    where: { supabaseId: data.user.id },
-    select: { id: true },
-  });
+    // Fetch user details from Clerk API
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+    const name = `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim() || email.split("@")[0] || "User";
+    const phone = clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
 
-  if (!owner && data.user.user_metadata?.role === "OWNER") {
-    try {
-      const newOwner = await prisma.shopOwner.create({
-        data: {
-          supabaseId: data.user.id,
-          email: data.user.email ?? "",
-          name: data.user.user_metadata?.name ?? data.user.email?.split("@")[0] ?? "Shop Owner",
-          phone: data.user.user_metadata?.phone ?? "0000000000",
-        },
-      });
-      owner = { id: newOwner.id };
-    } catch (e) {
-      console.error("Failed to auto-create shop owner on token verification:", e);
+    // Check if user is an admin by email
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim());
+    const isAdmin = adminEmails.includes(email);
+
+    // Read the role from Clerk metadata if present
+    const roleFromMetadata = clerkUser.publicMetadata?.role as string | undefined;
+
+    // Check shop owner
+    let owner = await prisma.shopOwner.findUnique({
+      where: { supabaseId: userId },
+      select: { id: true },
+    });
+
+    if (!owner && (roleFromMetadata === "OWNER" || email.includes("owner") || clerkUser.publicMetadata?.isOwner)) {
+      try {
+        const newOwner = await prisma.shopOwner.create({
+          data: {
+            supabaseId: userId,
+            email: email,
+            name: name,
+            phone: phone ?? "0000000000",
+          },
+        });
+        owner = { id: newOwner.id };
+      } catch (e) {
+        console.error("Failed to auto-create shop owner on token verification:", e);
+      }
     }
-  }
 
-  if (owner) {
-    return { supabaseId: data.user.id, email: data.user.email!, role: "OWNER" };
-  }
-
-  // Check customer/admin or auto-create
-  let customer = await prisma.user.findUnique({
-    where: { supabaseId: data.user.id },
-    select: { id: true },
-  });
-
-  if (!customer) {
-    try {
-      await prisma.user.create({
-        data: {
-          supabaseId: data.user.id,
-          email: data.user.email ?? "",
-          name: data.user.user_metadata?.name ?? data.user.email?.split("@")[0] ?? (isAdmin ? "Admin" : "Customer"),
-          phone: data.user.user_metadata?.phone ?? null,
-          role: isAdmin ? "ADMIN" : "CUSTOMER",
-        },
-      });
-    } catch (e) {
-      console.error("Failed to auto-create user on token verification:", e);
+    if (owner || roleFromMetadata === "OWNER") {
+      return { supabaseId: userId, email: email, role: "OWNER" };
     }
-  }
 
-  if (isAdmin) {
-    return { supabaseId: data.user.id, email: data.user.email!, role: "ADMIN" };
-  }
+    // Check customer/admin or auto-create
+    let customer = await prisma.user.findUnique({
+      where: { supabaseId: userId },
+      select: { id: true },
+    });
 
-  // Default: customer
-  return { supabaseId: data.user.id, email: data.user.email!, role: "CUSTOMER" };
+    if (!customer) {
+      try {
+        await prisma.user.create({
+          data: {
+            supabaseId: userId,
+            email: email,
+            name: name,
+            phone: phone,
+            role: isAdmin ? "ADMIN" : "CUSTOMER",
+          },
+        });
+      } catch (e) {
+        console.error("Failed to auto-create user on token verification:", e);
+      }
+    }
+
+    if (isAdmin || roleFromMetadata === "ADMIN") {
+      return { supabaseId: userId, email: email, role: "ADMIN" };
+    }
+
+    // Default: customer
+    return { supabaseId: userId, email: email, role: "CUSTOMER" };
+  } catch (err) {
+    console.error("Clerk token verification failed:", err);
+    return null;
+  }
 }
+
 

@@ -9,4 +9,4 @@ export default defineConfig({
   },
   server: { port: 5174 },
   envDir: path.resolve(__dirname, "../../"),
-});
+}); // Config reload trigger

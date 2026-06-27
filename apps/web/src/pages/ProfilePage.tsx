@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useAuthStore } from "../store/authStore";
+import { useUser, useClerk } from "@clerk/react";
 import { useNavigate, Link } from "react-router-dom";
 import { Calendar, Clock, MapPin, Star, AlertCircle, LogOut } from "lucide-react";
 import toast from "react-hot-toast";
@@ -28,7 +28,8 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ProfilePage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { user, signOut } = useAuthStore();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const [reviewShopId, setReviewShopId] = useState<string | null>(null);
   const [rating, setRating] = useState(5);
@@ -87,10 +88,10 @@ export default function ProfilePage() {
         <aside className="md:col-span-4">
           <div className="bg-white border border-border-light rounded-xl p-5 swiggy-shadow text-center">
             <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl mx-auto mb-4 shadow-sm">
-              {user?.email?.[0].toUpperCase() ?? "U"}
+              {user?.primaryEmailAddress?.emailAddress?.[0].toUpperCase() ?? "U"}
             </div>
             <p className="font-bold text-sm text-primary truncate px-2 mb-0.5">
-              {user?.email}
+              {user?.primaryEmailAddress?.emailAddress}
             </p>
             <p className="text-[10px] text-text-secondary font-bold uppercase tracking-wider mb-5">Customer Account</p>
 

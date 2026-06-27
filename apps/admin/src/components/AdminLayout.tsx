@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, ShieldCheck, ClipboardList, Users, ShieldAlert, LogOut, Scissors,
 } from "lucide-react";
-import { useAuthStore } from "../store/authStore";
+import { useUser, useClerk } from "@clerk/react";
 
 const links = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -33,7 +33,8 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
 }
 
 export function AdminLayout() {
-  const { signOut, user } = useAuthStore();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -83,10 +84,10 @@ export function AdminLayout() {
         <div style={{ padding: "12px", borderTop: "1px solid #e4ebf3" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 14, background: "#f5f7fa" }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#111111", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
-              {user?.email?.[0]?.toUpperCase() ?? "A"}
+              {user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? "A"}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#02060c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#02060c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.primaryEmailAddress?.emailAddress}</p>
               <p style={{ fontSize: 11, color: "rgba(2,6,12,0.4)", fontWeight: 600 }}>Administrator</p>
             </div>
             <button onClick={handleSignOut} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(2,6,12,0.35)", padding: 4, flexShrink: 0 }} title="Sign out">

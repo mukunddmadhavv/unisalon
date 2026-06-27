@@ -1,7 +1,5 @@
-import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "./lib/supabase";
-import { useAuthStore } from "./store/authStore";
+import { useAuth } from "@clerk/react";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import ShopDetailPage from "./pages/ShopDetailPage";
@@ -10,9 +8,9 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuthStore();
+  const { isSignedIn, isLoaded } = useAuth();
 
-  if (loading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-surface-border border-t-brand-500 rounded-full animate-spin" />
@@ -20,7 +18,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session) {
+  if (!isSignedIn) {
     return <Navigate to="/auth/login" replace />;
   }
 
@@ -28,14 +26,6 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { setSession } = useAuthStore();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
-    return () => subscription.unsubscribe();
-  }, [setSession]);
-
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -48,3 +38,4 @@ export default function App() {
     </Routes>
   );
 }
+

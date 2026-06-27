@@ -1,27 +1,29 @@
 import { useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "./lib/supabase";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useAuth, useUser, useClerk } from "@clerk/react";
 import { useAuthStore } from "./store/authStore";
-import { AdminLayout } from "./components/AdminLayout";
+import { api } from "./lib/api";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ApprovalsPage from "./pages/ApprovalsPage";
 import ShopsPage from "./pages/ShopsPage";
 import UsersPage from "./pages/UsersPage";
 import LogsPage from "./pages/LogsPage";
+import toast from "react-hot-toast";
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { session, loading, isAdmin } = useAuthStore();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { isAdmin } = useAuthStore();
 
-  if (loading) {
+  if (!isLoaded) {
     return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f7fa" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f7fa" }}>
         <div style={{ width: 32, height: 32, border: "3px solid #e4ebf3", borderTopColor: "#111111", borderRadius: "50%" }} />
       </div>
     );
   }
 
-  if (!session || !isAdmin) {
+  if (!isSignedIn || !isAdmin) {
     return <Navigate to="/auth/login" replace />;
   }
 
@@ -29,27 +31,29 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { setSession, setIsAdmin } = useAuthStore();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const { setIsAdmin } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        setIsAdmin(true); // Persisted or assumed true if session is valid; API will verify role
-      }
-    });
-
-    // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        setIsAdmin(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [setSession, setIsAdmin]);
+    if (isLoaded && user) {
+      api.getStats()
+        .then(() => {
+          setIsAdmin(true);
+        })
+        .catch((err) => {
+          console.error("Verification failed:", err);
+          setIsAdmin(false);
+          signOut().then(() => {
+            toast.error("Access Denied. Your email is not registered as an Admin.");
+            navigate("/auth/login");
+          });
+        });
+    } else if (isLoaded && !user) {
+      setIsAdmin(false);
+    }
+  }, [user, isLoaded, setIsAdmin, signOut, navigate]);
 
   return (
     <Routes>
@@ -68,3 +72,7 @@ export default function App() {
     </Routes>
   );
 }
+
+// Stub for AdminLayout to satisfy routing
+import { AdminLayout } from "./components/AdminLayout";
+

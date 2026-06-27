@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useAuthStore } from "../store/authStore";
-import { LogOut, Navigation, Compass } from "lucide-react";
+import { useAuth, UserButton } from "@clerk/react";
+import { Navigation, Compass } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Shop {
@@ -29,7 +29,7 @@ const CATEGORIES = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { session, signOut } = useAuthStore();
+  const { isSignedIn } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
   const [geoError, setGeoError] = useState(false);
@@ -143,7 +143,7 @@ export default function HomePage() {
 
         {/* Profile / Actions */}
         <div className="flex items-center gap-4">
-          {session ? (
+          {isSignedIn ? (
             <div className="flex items-center gap-3">
               <Link
                 to="/profile"
@@ -155,13 +155,7 @@ export default function HomePage() {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
                 />
               </Link>
-              <button
-                onClick={() => { signOut(); toast.success("Signed out"); }}
-                className="p-2 hover:bg-surface-container rounded-full text-text-secondary hover:text-primary transition-all duration-150"
-                title="Sign out"
-              >
-                <LogOut size={16} />
-              </button>
+              <UserButton />
             </div>
           ) : (
             <Link
