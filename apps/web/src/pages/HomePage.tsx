@@ -274,7 +274,7 @@ export default function HomePage() {
             </Link>
 
             {/* Search Input Box (Flexible width, takes up remaining space) */}
-            <div className="flex-1 min-w-0 max-w-xl mx-auto w-full">
+            <div className="flex-1 min-w-0 max-w-xl ml-4 sm:ml-6 md:ml-10 w-full mr-auto">
               <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] hover:bg-white border border-transparent hover:border-primary rounded-lg px-3 py-1.5 md:py-2.5 transition-colors duration-200">
                 <input
                   type="text"
