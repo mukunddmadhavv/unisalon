@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Upload, ChevronRight, Compass, ChevronLeft, Save, Move, ZoomIn, ZoomOut, X } from "lucide-react";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
+import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
 
 // ── ImageCropper Component (Canvas-based 16:9) ──────────────────────
 const CANVAS_W = 640;
@@ -234,7 +235,7 @@ export default function ShopSetupPage() {
     category: "UNISEX",
     address: "",
     city: "",
-    district: "",
+    district: "Pune",
     state: "Maharashtra",
     pincode: "",
     openTime: "09:00",
@@ -529,31 +530,50 @@ export default function ShopSetupPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
+                    <label className="label">State *</label>
+                    <select
+                      className="input bg-white cursor-pointer"
+                      value={form.state}
+                      onChange={(e) => {
+                        const newState = e.target.value;
+                        const dists = STATES_AND_DISTRICTS[newState] || [];
+                        setForm((prev) => ({
+                          ...prev,
+                          state: newState,
+                          district: dists[0] || "",
+                        }));
+                      }}
+                      required
+                    >
+                      <option value="">Select State</option>
+                      {STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">District *</label>
+                    <select
+                      className="input bg-white cursor-pointer"
+                      value={form.district}
+                      onChange={(e) => set("district", e.target.value)}
+                      required
+                      disabled={!form.state}
+                    >
+                      <option value="">Select District</option>
+                      {(STATES_AND_DISTRICTS[form.state] || []).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
                     <label className="label">City *</label>
                     <input
                       className="input"
                       value={form.city}
                       onChange={(e) => set("city", e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="label">District *</label>
-                    <input
-                      className="input"
-                      value={form.district}
-                      onChange={(e) => set("district", e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="label">State *</label>
-                    <input
-                      className="input"
-                      value={form.state}
-                      onChange={(e) => set("state", e.target.value)}
                       required
                     />
                   </div>
@@ -794,34 +814,51 @@ export default function ShopSetupPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <label className="label">State *</label>
+                  <select
+                    className="input bg-white cursor-pointer"
+                    value={form.state}
+                    onChange={(e) => {
+                      const newState = e.target.value;
+                      const dists = STATES_AND_DISTRICTS[newState] || [];
+                      setForm((prev) => ({
+                        ...prev,
+                        state: newState,
+                        district: dists[0] || "",
+                      }));
+                    }}
+                    required
+                  >
+                    <option value="">Select State</option>
+                    {STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">District *</label>
+                  <select
+                    className="input bg-white cursor-pointer"
+                    value={form.district}
+                    onChange={(e) => set("district", e.target.value)}
+                    required
+                    disabled={!form.state}
+                  >
+                    <option value="">Select District</option>
+                    {(STATES_AND_DISTRICTS[form.state] || []).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
                   <label className="label">City *</label>
                   <input
                     className="input"
                     placeholder="Mumbai, Pune, Delhi..."
                     value={form.city}
                     onChange={(e) => set("city", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="label">District *</label>
-                  <input
-                    className="input"
-                    placeholder="e.g. Pune District"
-                    value={form.district}
-                    onChange={(e) => set("district", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">State *</label>
-                  <input
-                    className="input"
-                    placeholder="Maharashtra"
-                    value={form.state}
-                    onChange={(e) => set("state", e.target.value)}
                     required
                   />
                 </div>

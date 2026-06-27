@@ -15,6 +15,7 @@ interface Shop {
   totalReviews: number;
   city: string;
   district: string;
+  distanceKm?: number | null;
 }
 
 const CATEGORIES = ["HAIRCUT", "BEARD", "FACIAL", "MASSAGE", "HAIR_COLOR", "HAIR_SPA", "OTHER"];
@@ -24,6 +25,7 @@ export default function ExplorePage() {
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "ALL");
   const [district, setDistrict] = useState(localStorage.getItem("user-district") ?? "Delhi");
+  const [sortBy, setSortBy] = useState<"distance" | "rating">("distance");
   const [page, setPage] = useState(1);
 
   const lat = localStorage.getItem("user-lat");
@@ -35,7 +37,7 @@ export default function ExplorePage() {
   });
 
   const { data: response, isLoading } = useQuery<{ shops: Shop[]; total: number }>({
-    queryKey: ["explore-shops", search, category, district, lat, lng, page],
+    queryKey: ["explore-shops", search, category, district, lat, lng, page, sortBy],
     queryFn: () =>
       api.getShops({
         search: search.trim() || undefined,
@@ -43,8 +45,9 @@ export default function ExplorePage() {
         district: !lat ? district : undefined,
         lat: lat ?? undefined,
         lng: lng ?? undefined,
-        radius: lat ? "15" : undefined,
+        radius: lat ? "30" : undefined, // Enforce 30km radius check
         page: String(page),
+        sortBy,
       }),
   });
 
@@ -150,10 +153,23 @@ export default function ExplorePage() {
 
         {/* Results Listings (Right Column) */}
         <section className="md:col-span-8 space-y-4">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <h2 className="font-headline-md text-base text-primary">
               {total > 0 ? `${total} partner salons` : "Explore Salons"}
             </h2>
+            
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-secondary font-medium">Sort by:</span>
+              <select
+                className="bg-white border border-border-light rounded-lg px-2.5 py-1.5 text-xs text-primary font-bold outline-none cursor-pointer hover:border-primary"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                {lat && lng && <option value="distance">Distance</option>}
+                <option value="rating">Rating (Reviews)</option>
+              </select>
+            </div>
           </div>
 
           {isLoading ? (
@@ -219,7 +235,12 @@ export default function ExplorePage() {
                       
                       <div className="flex items-center gap-1.5 border-t border-border-light pt-3 mt-3 text-[11px] text-text-secondary font-medium">
                         <MapPin size={11} className="text-text-secondary/70 shrink-0" />
-                        <span className="truncate">{shop.city}, {shop.district}</span>
+                        <span className="truncate">
+                          {shop.city}, {shop.district}
+                          {shop.distanceKm !== undefined && shop.distanceKm !== null
+                            ? ` • ${shop.distanceKm.toFixed(1)} km`
+                            : ""}
+                        </span>
                       </div>
                     </div>
                   </Link>

@@ -44,7 +44,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // ── Public: Shops & Geolocation ────────────────────────────────────
-  getShops: (params?: { category?: string; search?: string; city?: string; district?: string; lat?: string; lng?: string; radius?: string; page?: string }) => {
+  getShops: (params?: { category?: string; search?: string; city?: string; district?: string; lat?: string; lng?: string; radius?: string; page?: string; sortBy?: string }) => {
     const q = new URLSearchParams(params as Record<string, string>).toString();
     return request<any>(`/api/shops${q ? `?${q}` : ""}`);
   },

@@ -17,6 +17,7 @@ interface Shop {
   totalReviews: number;
   city: string;
   district: string;
+  distanceKm?: number | null;
 }
 
 const CATEGORIES = [
@@ -33,6 +34,9 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [geoError, setGeoError] = useState(false);
+  const [showDistrictSelector, setShowDistrictSelector] = useState(false);
+  const [sortBy, setSortBy] = useState<"distance" | "rating">("distance");
+
   const [lat, setLat] = useState<string | null>(localStorage.getItem("user-lat"));
   const [lng, setLng] = useState<string | null>(localStorage.getItem("user-lng"));
   const [selectedDistrict, setSelectedDistrict] = useState<string>(
@@ -45,13 +49,14 @@ export default function HomePage() {
   });
 
   const { data: shopsResponse, isLoading } = useQuery<{ shops: Shop[]; total: number }>({
-    queryKey: ["shops-landing", lat, lng, selectedDistrict],
+    queryKey: ["shops-landing", lat, lng, selectedDistrict, sortBy],
     queryFn: () =>
       api.getShops({
         lat: lat ?? undefined,
         lng: lng ?? undefined,
         district: !lat ? selectedDistrict : undefined,
-        radius: lat ? "10" : undefined,
+        radius: lat ? "30" : undefined, // Enforce 30km radius check
+        sortBy,
       }),
   });
 
@@ -70,6 +75,7 @@ export default function HomePage() {
         localStorage.setItem("user-lat", latitude);
         localStorage.setItem("user-lng", longitude);
         setGeoError(false);
+        setShowDistrictSelector(false);
         toast.success("Location resolved! Showing nearby salons.");
       },
       (error) => {
@@ -91,10 +97,25 @@ export default function HomePage() {
     setLng(null);
     localStorage.removeItem("user-lat");
     localStorage.removeItem("user-lng");
+    setGeoError(false);
+    setShowDistrictSelector(false);
+  };
+
+  const selectDistrictManually = (d: string) => {
+    setSelectedDistrict(d);
+    localStorage.setItem("user-district", d);
+    setLat(null);
+    setLng(null);
+    localStorage.removeItem("user-lat");
+    localStorage.removeItem("user-lng");
+    setGeoError(false);
+    setShowDistrictSelector(false);
   };
 
   useEffect(() => {
-    if (!lat && !lng && !localStorage.getItem("user-district")) requestLocation();
+    if (!lat && !lng && !localStorage.getItem("user-district")) {
+      requestLocation();
+    }
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -103,6 +124,110 @@ export default function HomePage() {
   };
 
   const shops = shopsResponse?.shops ?? [];
+
+  // ── RENDER ONBOARDING SCREEN (If location permission is not granted and no manual district is chosen)
+  if (!lat && !lng && !localStorage.getItem("user-district") && !geoError && !showDistrictSelector) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#311042] text-white flex flex-col justify-center items-center p-6 font-sans">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl shadow-2xl space-y-8 text-center animate-slide-up">
+          {/* Logo */}
+          <div className="flex justify-center items-center gap-2">
+            <span className="material-symbols-outlined text-secondary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>explore</span>
+            <h1 className="font-display font-black text-3xl tracking-tighter">UNISALON</h1>
+          </div>
+          
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold font-headline-lg">Discover Partner Salons Near You</h2>
+            <p className="text-white/70 text-xs leading-relaxed">
+              UniSalon needs location access to search for premium salons, barbershops, and spa services active in your immediate vicinity.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={requestLocation}
+              className="w-full bg-secondary text-primary font-bold text-sm py-4 rounded-xl hover:opacity-95 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-lg shadow-secondary/25"
+            >
+              <Compass size={18} className="animate-pulse" />
+              Find Salons Near Me
+            </button>
+            
+            <button
+              onClick={() => setShowDistrictSelector(true)}
+              className="w-full bg-white/10 hover:bg-white/15 text-white border border-white/10 font-bold text-sm py-3.5 rounded-xl active:scale-98 transition-all"
+            >
+              Select District Manually
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── RENDER FALLBACK SCREEN (If location denied, no shops nearby, or manually requesting selector)
+  const isNoShopsNearby = lat && lng && !isLoading && shops.length === 0;
+  if (showDistrictSelector || geoError || isNoShopsNearby) {
+    let title = "Not in your area yet!";
+    let subtitle = "We haven't launched in your location yet. But we are operating in these active districts — select one to browse:";
+    
+    if (geoError) {
+      title = "Location Access Denied";
+      subtitle = "We need location access to find nearby salons automatically. Please select one of our operating districts below to browse manually:";
+    } else if (showDistrictSelector) {
+      title = "Select District";
+      subtitle = "Please choose one of our active operating districts to browse available salons:";
+    }
+
+    return (
+      <div className="min-h-screen bg-[#090d16] text-white flex flex-col justify-center items-center p-6 font-sans">
+        <div className="max-w-lg w-full bg-[#111827] border border-white/5 p-8 rounded-3xl shadow-2xl space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <span className="material-symbols-outlined text-secondary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>location_off</span>
+            <h2 className="text-xl font-bold font-headline-lg mt-3">{title}</h2>
+            <p className="text-gray-400 text-xs leading-relaxed max-w-sm mx-auto">{subtitle}</p>
+          </div>
+
+          {districts.length === 0 ? (
+            <div className="text-center py-6 text-xs text-gray-500">Loading active districts...</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto pr-1 no-scrollbar">
+              {districts.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => selectDistrictManually(d)}
+                  className="py-3 px-4 bg-white/5 border border-white/10 hover:bg-secondary hover:text-primary hover:border-secondary rounded-xl text-xs font-bold text-center transition-all truncate active:scale-95"
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!geoError && !showDistrictSelector && (
+            <div className="border-t border-white/5 pt-4 text-center">
+              <button
+                onClick={requestLocation}
+                className="text-xs text-secondary font-bold hover:underline flex items-center justify-center gap-1.5 mx-auto"
+              >
+                <Compass size={12} /> Retry my GPS Location
+              </button>
+            </div>
+          )}
+
+          {(geoError || showDistrictSelector) && (
+            <div className="border-t border-white/5 pt-4 text-center">
+              <button
+                onClick={() => { setGeoError(false); setShowDistrictSelector(false); }}
+                className="text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-text-primary pb-28 font-body-md">
@@ -210,14 +335,6 @@ export default function HomePage() {
               <span className="material-symbols-outlined">search</span>
             </button>
           </form>
-
-          {geoError && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-text-secondary bg-surface-container p-2.5 rounded-lg border border-border-light animate-fade-in">
-              <Compass size={13} className="text-secondary shrink-0" />
-              <span>GPS unavailable — listing salons in {selectedDistrict}.</span>
-              <button onClick={requestLocation} className="text-primary font-bold underline ml-auto">Retry GPS</button>
-            </div>
-          )}
         </section>
 
         {/* Hero Promo Banners Carousel / Grid */}
@@ -287,6 +404,30 @@ export default function HomePage() {
         <section className="py-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-headline-lg text-lg text-text-primary">Top Rated Salons</h3>
+            {lat && lng && (
+              <div className="flex items-center gap-1.5 bg-surface-container p-1 rounded-lg border border-border-light text-[11px] font-bold">
+                <button
+                  onClick={() => setSortBy("distance")}
+                  className={`px-3 py-1.5 rounded-md transition-colors ${
+                    sortBy === "distance"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-text-secondary hover:text-primary"
+                  }`}
+                >
+                  Distance
+                </button>
+                <button
+                  onClick={() => setSortBy("rating")}
+                  className={`px-3 py-1.5 rounded-md transition-colors ${
+                    sortBy === "rating"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-text-secondary hover:text-primary"
+                  }`}
+                >
+                  Rating
+                </button>
+              </div>
+            )}
           </div>
 
           {isLoading ? (
@@ -355,7 +496,10 @@ export default function HomePage() {
                       </p>
                       
                       <p className="text-text-secondary text-xs mt-0.5">
-                        {shop.city}, {shop.district} • 2.5 km
+                        {shop.city}, {shop.district}
+                        {shop.distanceKm !== undefined && shop.distanceKm !== null
+                          ? ` • ${shop.distanceKm.toFixed(1)} km`
+                          : ""}
                       </p>
                     </div>
                   </div>
