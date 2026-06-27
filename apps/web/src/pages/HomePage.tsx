@@ -250,21 +250,31 @@ export default function HomePage() {
         
         {/* ── TOP BAR (PREMIUM HEADER) ── */}
         <header className="bg-white sticky top-0 w-full z-50 border-b border-border-light shadow-sm transition-colors duration-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center w-full">
-            <div className="flex items-center gap-6">
-              {/* Logo */}
-              <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black">
-                UNISALON
-              </Link>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 w-full">
+            {/* Logo */}
+            <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black shrink-0">
+              UNISALON
+            </Link>
+
+            {/* Search Input Box in Header */}
+            <div className="flex-1 max-w-xl mx-auto w-full">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-white border border-border-light rounded-xl px-4 py-2 hover:border-primary transition-colors duration-200">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search for salons, services or more"
+                  className="w-full border-none p-0 bg-transparent text-xs text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
+                />
+                <button type="submit" className="absolute right-4 text-text-secondary flex items-center">
+                  <span className="material-symbols-outlined text-[18px]">search</span>
+                </button>
+              </form>
             </div>
 
             {/* Actions & Navigation */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 shrink-0">
               <nav className="hidden lg:flex items-center gap-8">
-                <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-[18px]">search</span>
-                  Search
-                </Link>
                 <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-[18px]">local_offer</span>
                   Offers
@@ -273,19 +283,7 @@ export default function HomePage() {
 
               <div className="flex items-center gap-4">
                 {isSignedIn ? (
-                  <div className="flex items-center gap-3">
-                    <Link
-                      to="/profile"
-                      className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-border-light flex items-center justify-center bg-surface-container hover:opacity-90"
-                    >
-                      <img
-                        className="w-full h-full object-cover"
-                        alt="Profile"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
-                      />
-                    </Link>
                     <UserButton />
-                  </div>
                 ) : (
                   <Link
                     to="/auth/login"
@@ -346,22 +344,6 @@ export default function HomePage() {
 
         {/* ── MAIN CONTENT ── */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-6">
-          
-          {/* Search Input Box */}
-          <section className="py-2 mb-4">
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-white border border-border-light rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for salons, services or more"
-                className="w-full border-none p-0 bg-transparent text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
-              />
-              <button type="submit" className="absolute right-4 text-text-secondary flex items-center">
-                <span className="material-symbols-outlined">search</span>
-              </button>
-            </form>
-          </section>
 
           {/* Hero Promo Banners Carousel / Grid */}
           <section className="py-2 overflow-x-auto no-scrollbar flex md:grid md:grid-cols-2 gap-6 mb-6">
