@@ -182,12 +182,13 @@ export default function HomePage() {
               ) : (
                 <Link
                   to="/auth/login"
-                  className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                  className="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
                 >
                   Sign In
                 </Link>
               )}
             </div>
+
           </div>
         </div>
       </header>
