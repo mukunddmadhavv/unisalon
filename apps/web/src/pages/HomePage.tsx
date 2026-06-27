@@ -107,72 +107,96 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-text-primary pb-28 font-body-md">
       
-      {/* ── TOP BAR (SWIGGY HEADER) ── */}
-      <header className="bg-white sticky top-0 w-full px-5 py-3.5 z-50 flex justify-between items-center border-b border-border-light shadow-sm transition-colors duration-200">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[24px]">location_on</span>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Location</span>
-            <div className="flex items-center gap-1">
-              {lat && lng ? (
-                <button
-                  type="button"
-                  onClick={requestLocation}
-                  className="font-headline-md text-sm text-primary flex items-center gap-1 hover:opacity-80 text-left font-bold"
-                >
-                  <Navigation size={12} className="fill-primary" />
-                  Nearby (GPS)
-                </button>
-              ) : (
-                <div className="relative flex items-center">
-                  <select
-                    value={selectedDistrict}
-                    onChange={handleDistrictChange}
-                    className="appearance-none pr-6 bg-transparent font-headline-md text-sm font-bold text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
-                  >
-                    {districts.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                  <span className="material-symbols-outlined text-[16px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+      {/* ── TOP BAR (PREMIUM HEADER) ── */}
+      <header className="bg-white sticky top-0 w-full z-50 border-b border-border-light shadow-sm transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center w-full">
+          <div className="flex items-center gap-6">
+            {/* Logo */}
+            <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black">
+              UNISALON
+            </Link>
+            <div className="hidden md:block h-6 w-[1px] bg-border-light"></div>
+            
+            {/* Location Selector */}
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[20px] md:text-[24px]">location_on</span>
+              <div className="flex flex-col">
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-text-secondary">Location</span>
+                <div className="flex items-center gap-1">
+                  {lat && lng ? (
+                    <button
+                      type="button"
+                      onClick={requestLocation}
+                      className="font-headline-md text-xs md:text-sm text-primary flex items-center gap-1 hover:opacity-80 text-left font-bold"
+                    >
+                      <Navigation size={10} className="fill-primary" />
+                      Nearby (GPS)
+                    </button>
+                  ) : (
+                    <div className="relative flex items-center">
+                      <select
+                        value={selectedDistrict}
+                        onChange={handleDistrictChange}
+                        className="appearance-none pr-6 bg-transparent font-headline-md text-xs md:text-sm font-bold text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+                      >
+                        {districts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <span className="material-symbols-outlined text-[16px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+                    </div>
+                  )}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions & Navigation */}
+          <div className="flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-8">
+              <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[18px]">search</span>
+                Search
+              </Link>
+              <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[18px]">local_offer</span>
+                Offers
+              </Link>
+            </nav>
+
+            <div className="flex items-center gap-4">
+              {isSignedIn ? (
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/profile"
+                    className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-border-light flex items-center justify-center bg-surface-container hover:opacity-90"
+                  >
+                    <img
+                      className="w-full h-full object-cover"
+                      alt="Profile"
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
+                    />
+                  </Link>
+                  <UserButton />
+                </div>
+              ) : (
+                <Link
+                  to="/auth/login"
+                  className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                >
+                  Sign In
+                </Link>
               )}
             </div>
           </div>
         </div>
-
-        {/* Profile / Actions */}
-        <div className="flex items-center gap-4">
-          {isSignedIn ? (
-            <div className="flex items-center gap-3">
-              <Link
-                to="/profile"
-                className="w-9 h-9 rounded-full overflow-hidden border border-border-light flex items-center justify-center bg-surface-container"
-              >
-                <img
-                  className="w-full h-full object-cover"
-                  alt="Profile"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
-                />
-              </Link>
-              <UserButton />
-            </div>
-          ) : (
-            <Link
-              to="/auth/login"
-              className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all"
-            >
-              Sign In
-            </Link>
-          )}
-        </div>
       </header>
 
       {/* ── MAIN CONTENT ── */}
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         {/* Search Input Box */}
-        <section className="px-5 py-4">
+        <section className="py-2 mb-4">
           <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-white border border-border-light rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200">
             <input
               type="text"
@@ -195,12 +219,12 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Hero Promo Banners Carousel */}
-        <section className="px-5 py-2 overflow-x-auto no-scrollbar flex gap-4">
-          <div className="min-w-[82vw] sm:min-w-[340px] aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light">
+        {/* Hero Promo Banners Carousel / Grid */}
+        <section className="py-2 overflow-x-auto no-scrollbar flex md:grid md:grid-cols-2 gap-6 mb-6">
+          <div className="min-w-[82vw] sm:min-w-[340px] md:min-w-0 aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-black/75 to-transparent z-10"></div>
             <div className="absolute inset-0 z-20 p-5 flex flex-col justify-center text-white">
-              <h2 className="font-headline-lg-mobile text-lg text-white leading-tight font-black">
+              <h2 className="font-headline-lg-mobile text-lg md:text-xl text-white leading-tight font-black">
                 First Appointment?<br />
                 <span className="text-secondary-container">50% OFF</span>
               </h2>
@@ -213,10 +237,10 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="min-w-[82vw] sm:min-w-[340px] aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light">
+          <div className="min-w-[82vw] sm:min-w-[340px] md:min-w-0 aspect-[21/9] rounded-xl overflow-hidden relative group cursor-pointer border border-border-light shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-black/75 to-transparent z-10"></div>
             <div className="absolute inset-0 z-20 p-5 flex flex-col justify-center text-white">
-              <h2 className="font-headline-lg-mobile text-lg text-white leading-tight font-black">
+              <h2 className="font-headline-lg-mobile text-lg md:text-xl text-white leading-tight font-black">
                 Grooming Kits<br />
                 <span className="text-secondary-container">SAVE ₹499</span>
               </h2>
@@ -231,42 +255,44 @@ export default function HomePage() {
         </section>
 
         {/* Categories Circle roundels */}
-        <section className="py-6">
-          <div className="px-5 mb-4">
-            <h3 className="font-headline-md text-base text-text-primary">What's on your mind?</h3>
+        <section className="py-4 mb-4">
+          <div className="mb-4">
+            <h3 className="font-headline-lg text-lg text-text-primary">What's on your mind?</h3>
           </div>
-          <div className="flex overflow-x-auto no-scrollbar px-5 gap-5 pb-1">
+          <div className="flex overflow-x-auto no-scrollbar gap-6 md:gap-10 pb-1">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.name}
                 to={`/explore?category=${cat.name}`}
-                className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
+                className="flex flex-col items-center gap-3 cursor-pointer shrink-0 group"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-surface border border-border-light hover:border-primary transition-all duration-300 shadow-sm">
+                <div className="w-16 h-16 md:w-28 md:h-28 rounded-full overflow-hidden bg-surface border border-border-light group-hover:border-primary transition-all duration-300 shadow-sm">
                   <img
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
                     alt={cat.label}
                     src={cat.image}
                   />
                 </div>
-                <span className="text-[11px] font-bold text-text-primary tracking-wide">{cat.label}</span>
+                <span className="text-xs md:text-sm font-bold text-text-secondary group-hover:text-primary transition-colors tracking-wide">{cat.label}</span>
               </Link>
             ))}
           </div>
         </section>
 
         {/* Divider */}
-        <div className="h-px bg-border-light mx-5"></div>
+        <div className="h-px bg-border-light my-4"></div>
 
         {/* Partners list */}
-        <section className="py-6 px-5">
-          <h3 className="font-headline-md text-base text-text-primary mb-5">Salons for you</h3>
+        <section className="py-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-headline-lg text-lg text-text-primary">Top Rated Salons</h3>
+          </div>
 
           {isLoading ? (
-            <div className="flex flex-col gap-6">
-              {[1, 2].map((n) => (
-                <div key={n} className="rounded-xl overflow-hidden bg-white border border-border-light">
-                  <div className="skeleton aspect-[16/9] w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="rounded-xl overflow-hidden bg-white border border-border-light shadow-sm">
+                  <div className="skeleton aspect-[4/3] w-full" />
                   <div className="p-4 space-y-2">
                     <div className="skeleton h-5 w-1/3" />
                     <div className="skeleton h-4 w-1/2" />
@@ -281,17 +307,17 @@ export default function HomePage() {
               <p className="text-text-secondary text-xs mt-1">We haven't launched in this district yet. Try selecting Delhi.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {shops.map((shop) => (
                 <Link
                   key={shop.id}
                   to={`/shop/${shop.slug}`}
-                  className="group cursor-pointer block bg-white rounded-xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                  className="group cursor-pointer block bg-white rounded-2xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="relative aspect-[21/9] w-full overflow-hidden">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden">
                     {shop.coverImage ? (
                       <img
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         alt={shop.name}
                         src={shop.coverImage}
                       />
@@ -302,25 +328,31 @@ export default function HomePage() {
                     )}
                     {/* Offer Tag Mockup overlay */}
                     <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded text-primary font-bold text-[10px] tracking-wider uppercase border border-border-light/40">
-                      ₹200 OFF
+                      40% OFF
                     </div>
                   </div>
 
                   <div className="p-4 flex justify-between items-start gap-4">
-                    <div className="min-w-0">
-                      <h4 className="font-headline-md text-base text-text-primary group-hover:text-secondary transition-colors truncate">
-                        {shop.name}
-                      </h4>
-                      <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary font-medium">
-                        <div className="bg-rating-green text-white flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                    <div className="min-w-0 w-full">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-headline-md text-sm md:text-base text-text-primary group-hover:text-primary transition-colors truncate pr-1">
+                          {shop.name}
+                        </h4>
+                        <div className="bg-rating-green text-white flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">
                           <span>{shop.rating.toFixed(1)}</span>
                           <span className="material-symbols-outlined !text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                         </div>
-                        <span className="text-text-primary font-bold text-[11px]">• 25-30 mins</span>
                       </div>
-                      <p className="text-text-secondary text-xs mt-1 font-semibold uppercase tracking-wider text-secondary">
+
+                      <div className="flex items-center gap-1 mt-1 text-xs text-text-secondary font-medium">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>
+                        <span>30-45 mins • ₹600 for two</span>
+                      </div>
+
+                      <p className="text-text-secondary text-[11px] mt-1 font-semibold uppercase tracking-wider text-secondary truncate">
                         {shop.category.replace(/_/g, " ")}
                       </p>
+                      
                       <p className="text-text-secondary text-xs mt-0.5">
                         {shop.city}, {shop.district} • 2.5 km
                       </p>
