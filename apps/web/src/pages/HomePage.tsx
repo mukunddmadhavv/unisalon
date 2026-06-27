@@ -282,13 +282,13 @@ export default function HomePage() {
                 </Link>
               </nav>
 
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 {isSignedIn ? (
                   <UserButton />
                 ) : (
                   <Link
                     to="/auth/login"
-                    className="bg-black text-white text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                    className="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
                   >
                     Sign In
                   </Link>
@@ -533,10 +533,17 @@ export default function HomePage() {
             <span className="material-symbols-outlined text-[22px]">local_offer</span>
             <span className="text-[10px] font-bold">Offers</span>
           </Link>
-          <Link to="/profile" className="flex flex-col items-center gap-0.5 text-text-secondary hover:text-primary">
-            <span className="material-symbols-outlined text-[22px]">person</span>
-            <span className="text-[10px] font-bold">Profile</span>
-          </Link>
+          {isSignedIn ? (
+            <div className="flex flex-col items-center gap-0.5 scale-90">
+              <UserButton />
+              <span className="text-[10px] font-bold text-text-secondary mt-0.5">Profile</span>
+            </div>
+          ) : (
+            <Link to="/auth/login" className="flex flex-col items-center gap-0.5 text-text-secondary hover:text-primary">
+              <span className="material-symbols-outlined text-[22px]">person</span>
+              <span className="text-[10px] font-bold">Profile</span>
+            </Link>
+          )}
         </nav>
       </div>
     </>
