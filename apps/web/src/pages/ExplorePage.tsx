@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { Search, Filter, MapPin, Star, Store, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, MapPin, Star, Store, ChevronLeft, ChevronRight, Navigation } from "lucide-react";
 
 interface Shop {
   id: string;
@@ -86,6 +86,57 @@ export default function ExplorePage() {
         </div>
         <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Search Directory</span>
       </header>
+
+      {/* ── SUB-HEADER LOCATION BAR (Flipkart/Zepto style) ── */}
+      <div className="bg-white border-b border-border-light py-2.5 px-5 max-w-4xl mx-auto transition-colors duration-200">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-text-primary">
+            <span className="material-symbols-outlined text-primary text-[18px] shrink-0">location_on</span>
+            <span className="text-text-secondary font-medium">Browsing salons in</span>
+            <div className="flex items-center gap-1 font-bold text-primary">
+              {lat && lng ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition((pos) => {
+                        const latitude = String(pos.coords.latitude);
+                        const longitude = String(pos.coords.longitude);
+                        localStorage.setItem("user-lat", latitude);
+                        localStorage.setItem("user-lng", longitude);
+                        window.location.reload();
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-1 hover:opacity-85 text-left font-extrabold text-xs"
+                >
+                  <Navigation size={10} className="fill-primary" />
+                  Nearby (GPS)
+                </button>
+              ) : (
+                <div className="relative flex items-center">
+                  <select
+                    value={district}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDistrict(val);
+                      localStorage.setItem("user-district", val);
+                      localStorage.removeItem("user-lat");
+                      localStorage.removeItem("user-lng");
+                    }}
+                    className="appearance-none pr-5 bg-transparent font-extrabold text-xs text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+                  >
+                    {districts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined text-[14px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── PAGE LAYOUT ── */}
       <div className="max-w-4xl mx-auto mt-6 px-5 grid grid-cols-1 md:grid-cols-12 gap-6">

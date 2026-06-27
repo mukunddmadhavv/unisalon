@@ -256,40 +256,6 @@ export default function HomePage() {
               <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black">
                 UNISALON
               </Link>
-              <div className="hidden md:block h-6 w-[1px] bg-border-light"></div>
-              
-              {/* Location Selector */}
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[20px] md:text-[24px]">location_on</span>
-                <div className="flex flex-col">
-                  <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-text-secondary">Location</span>
-                  <div className="flex items-center gap-1">
-                    {lat && lng ? (
-                      <button
-                        type="button"
-                        onClick={requestLocation}
-                        className="font-headline-md text-xs md:text-sm text-primary flex items-center gap-1 hover:opacity-80 text-left font-bold"
-                      >
-                        <Navigation size={10} className="fill-primary" />
-                        Nearby (GPS)
-                      </button>
-                    ) : (
-                      <div className="relative flex items-center">
-                        <select
-                          value={selectedDistrict}
-                          onChange={handleDistrictChange}
-                          className="appearance-none pr-6 bg-transparent font-headline-md text-xs md:text-sm font-bold text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
-                        >
-                          {districts.map((d) => (
-                            <option key={d} value={d}>{d}</option>
-                          ))}
-                        </select>
-                        <span className="material-symbols-outlined text-[16px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Actions & Navigation */}
@@ -316,7 +282,7 @@ export default function HomePage() {
                         className="w-full h-full object-cover"
                         alt="Profile"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmG0j0iZNOMdjBk4SHHdDERG3_apqIYDx-LYWyFfendiqU-Wer8C3Djlu_zaLXQskHZZ4cuRMImn_9qM6H--1n7rmuZEqXidV00LnhFKPvaurPNZ5jwQJhXtMfEj3ZkQNkDFVd3Anz3Cs_ZxzQpHCXVZCYMq788JrbWYGoSrdb4SdZMyWgyy9uWazUWvCgOmjk4BuPWS8bkMxEzKweaGpyiqGL_dfRBBQCwCGQE5L91sfDUai7xDptZKWGA4sUiTp-CQyl-76WiljI"
-                    />
+                      />
                     </Link>
                     <UserButton />
                   </div>
@@ -333,6 +299,48 @@ export default function HomePage() {
             </div>
           </div>
         </header>
+
+        {/* ── SUB-HEADER LOCATION BAR (Flipkart/Zepto style) ── */}
+        <div className="bg-white border-b border-border-light py-2.5 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-text-primary">
+              <span className="material-symbols-outlined text-primary text-[18px] shrink-0">location_on</span>
+              <span className="text-text-secondary font-medium">Browsing salons in</span>
+              <div className="flex items-center gap-1 font-bold text-primary">
+                {lat && lng ? (
+                  <button
+                    type="button"
+                    onClick={requestLocation}
+                    className="flex items-center gap-1 hover:opacity-85 text-left font-extrabold text-xs"
+                  >
+                    <Navigation size={10} className="fill-primary" />
+                    Nearby (GPS)
+                  </button>
+                ) : (
+                  <div className="relative flex items-center">
+                    <select
+                      value={selectedDistrict}
+                      onChange={handleDistrictChange}
+                      className="appearance-none pr-5 bg-transparent font-extrabold text-xs text-primary border-none p-0 outline-none cursor-pointer focus:ring-0"
+                    >
+                      {districts.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined text-[14px] pointer-events-none absolute right-0 text-text-secondary">expand_more</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowDistrictSelector(true)}
+              className="text-[10px] font-bold text-black uppercase tracking-wider hover:underline"
+            >
+              Change Location
+            </button>
+          </div>
+        </div>
 
         {/* ── MAIN CONTENT ── */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
