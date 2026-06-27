@@ -250,61 +250,45 @@ export default function HomePage() {
         
         {/* ── TOP BAR (PREMIUM HEADER) ── */}
         <header className="bg-white sticky top-0 w-full z-50 border-b border-border-light shadow-sm transition-colors duration-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-6 w-full">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-3.5 flex items-center justify-between gap-2.5 sm:gap-4 w-full">
             
-            {/* Row 1 (Mobile logo + User button, desktop logo only) */}
-            <div className="flex items-center justify-between w-full md:w-auto shrink-0">
-              <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black">
-                UNISALON
-              </Link>
-              
-              {/* User actions for Mobile */}
-              <div className="md:hidden flex items-center gap-3">
-                {isSignedIn ? (
-                  <UserButton />
-                ) : (
-                  <Link
-                    to="/auth/login"
-                    className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
-                  >
-                    Sign In
-                  </Link>
-                )}
-              </div>
-            </div>
+            {/* Logo */}
+            <Link to="/" className="font-headline-md text-sm sm:text-lg md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black shrink-0">
+              UNISALON
+            </Link>
 
-            {/* Search Input Box (Full-width on mobile, max-w-xl centered on desktop) */}
-            <div className="flex-1 w-full max-w-full md:max-w-xl mx-auto order-3 md:order-2">
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] border border-transparent hover:border-primary rounded-xl px-4 py-2.5 transition-colors duration-200">
+            {/* Search Input Box (Flexible width, takes up remaining space) */}
+            <div className="flex-1 min-w-0 max-w-xl mx-auto w-full">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] hover:bg-white border border-transparent hover:border-primary rounded-lg px-3 py-1.5 md:py-2.5 transition-colors duration-200">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search for salons, services or more"
-                  className="w-full border-none p-0 bg-transparent text-xs md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
+                  placeholder="Search salons..."
+                  className="w-full border-none p-0 bg-transparent text-[11px] md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none truncate pr-6"
                 />
-                <button type="submit" className="absolute right-4 text-text-secondary flex items-center">
-                  <span className="material-symbols-outlined text-[18px]">search</span>
+                <button type="submit" className="absolute right-3 text-text-secondary flex items-center">
+                  <span className="material-symbols-outlined text-[16px] md:text-[18px]">search</span>
                 </button>
               </form>
             </div>
 
-            {/* Actions & Navigation (Hidden on mobile) */}
-            <div className="hidden md:flex items-center gap-6 shrink-0 order-2 md:order-3">
-              <nav className="flex items-center gap-8">
+            {/* Actions & Navigation */}
+            <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+              <nav className="hidden md:flex items-center gap-8">
                 <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-[18px]">local_offer</span>
                   Offers
                 </Link>
               </nav>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 {isSignedIn ? (
                   <UserButton />
                 ) : (
                   <Link
                     to="/auth/login"
-                    className="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                    className="bg-black text-white text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
                   >
                     Sign In
                   </Link>
