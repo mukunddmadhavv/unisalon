@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useAuthStore } from "../store/authStore";
-import { supabase } from "../lib/supabase";
-import { ShieldCheck, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useAuth, SignIn } from "@clerk/react";
+import { ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Service {
@@ -32,18 +31,11 @@ interface SlotHoldDetail {
 
 export default function BookingConfirmPage() {
   const navigate = useNavigate();
-  const { session, setSession } = useAuthStore();
+  const { isSignedIn } = useAuth();
 
   const [notes, setNotes] = useState("");
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
 
   const holdId = localStorage.getItem("unisalon-active-hold-id");
 
@@ -78,30 +70,7 @@ export default function BookingConfirmPage() {
     return () => clearInterval(interval);
   }, [hold?.expiresAt, confirmed]);
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    try {
-      if (authMode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { name, role: "CUSTOMER" } },
-        });
-        if (error) throw error;
-        toast.success("Account created! Check your email to confirm.");
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        setSession(data.session);
-        toast.success("Signed in successfully!");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+
 
   const confirmMutation = useMutation({
     mutationFn: () => api.createBooking({ holdId: holdId!, notes: notes || undefined }),
@@ -199,48 +168,13 @@ export default function BookingConfirmPage() {
         
         {/* Left Column: Auth Forms or Confirm Button */}
         <div className="md:col-span-7 space-y-4">
-          {!session ? (
-            <div className="bg-white border border-border-light rounded-xl p-6 swiggy-shadow">
-              <h3 className="font-headline-md text-base text-primary mb-1">Sign In Required</h3>
-              <p className="text-xs text-text-secondary font-medium mb-5">
+          {!isSignedIn ? (
+            <div className="bg-white border border-border-light rounded-xl p-6 swiggy-shadow flex flex-col items-center">
+              <h3 className="font-headline-md text-base text-primary mb-1 self-start">Sign In Required</h3>
+              <p className="text-xs text-text-secondary font-medium mb-5 self-start">
                 Authenticate to link your details to this reservation.
               </p>
-
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                {authMode === "signup" && (
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Full Name</label>
-                    <input className="us-input !pl-4 !py-2.5 !text-xs border border-border-light hover:border-primary" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
-                  </div>
-                )}
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Email Address</label>
-                  <div className="relative">
-                    <Mail size={13} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/60" />
-                    <input className="us-input !py-2.5 !text-xs border border-border-light hover:border-primary" placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1 block">Password</label>
-                  <div className="relative">
-                    <Lock size={13} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/60" />
-                    <input className="us-input !py-2.5 !text-xs border border-border-light hover:border-primary pr-10" placeholder="••••••••" type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary/50">
-                      {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={authLoading} className="btn-primary w-full justify-center !py-3 !text-xs mt-2">
-                  {authLoading ? "Authenticating..." : authMode === "login" ? "Sign In & Continue" : "Create Account & Continue"}
-                </button>
-              </form>
-
-              <p className="text-center text-xs text-text-secondary mt-5">
-                {authMode === "login" ? "No account? " : "Have an account? "}
-                <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")} className="font-black text-xs text-primary underline">
-                  {authMode === "login" ? "Register" : "Sign in"}
-                </button>
-              </p>
+              <SignIn routing="hash" />
             </div>
           ) : (
             <div className="bg-white border border-border-light rounded-xl p-6 swiggy-shadow space-y-4">
@@ -357,7 +291,7 @@ export default function BookingConfirmPage() {
           </div>
           <button
             onClick={() => confirmMutation.mutate()}
-            disabled={confirmMutation.isPending || !session}
+            disabled={confirmMutation.isPending || !isSignedIn}
             className="bg-primary text-on-primary font-bold text-xs px-6 py-3 rounded-lg flex items-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-md disabled:opacity-40"
           >
             {confirmMutation.isPending ? "Confirming..." : "Proceed to Book"}
