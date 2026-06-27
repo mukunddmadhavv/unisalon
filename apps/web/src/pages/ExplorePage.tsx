@@ -88,8 +88,8 @@ export default function ExplorePage() {
       </header>
 
       {/* ── SUB-HEADER LOCATION BAR (Flipkart/Zepto style) ── */}
-      <div className="bg-background py-3 px-5 max-w-4xl mx-auto">
-        <div className="bg-white border border-border-light rounded-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm hover:border-primary transition-all duration-200">
+      <div className="bg-background pt-3 pb-0 px-5 max-w-4xl mx-auto">
+        <div className="bg-white border border-border-light rounded-xl px-4 py-2 flex items-center justify-between text-xs shadow-sm hover:border-primary transition-all duration-200">
           <div className="flex items-center gap-2 text-text-primary">
             <span className="material-symbols-outlined text-primary text-[18px] shrink-0">location_on</span>
             <span className="text-text-secondary font-medium">Browsing salons in</span>
@@ -139,7 +139,7 @@ export default function ExplorePage() {
       </div>
 
       {/* ── PAGE LAYOUT ── */}
-      <div className="max-w-4xl mx-auto mt-6 px-5 grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="max-w-4xl mx-auto mt-3 px-5 grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Filters Sidebar (Left Column) */}
         <aside className="md:col-span-4">
