@@ -14,9 +14,32 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = await getAuthHeaders();
   const res = await fetch(`${API}${path}`, { ...options, headers: { ...headers, ...options.headers } });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error ?? "Request failed");
-  return json.data as T;
+  
+  if (!res.ok) {
+    let errorMessage = `HTTP error! status: ${res.status}`;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        const json = await res.json();
+        errorMessage = json.error ?? errorMessage;
+      } catch (_) {}
+    } else {
+      try {
+        const text = await res.text();
+        if (text) errorMessage = text;
+      } catch (_) {}
+    }
+    throw new Error(errorMessage);
+  }
+
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error ?? "Request failed");
+    return json.data as T;
+  }
+  
+  throw new Error("Response is not JSON");
 }
 
 export const api = {
