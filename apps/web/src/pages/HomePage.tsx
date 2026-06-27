@@ -28,10 +28,26 @@ const CATEGORIES = [
   { name: "HAIR_COLOR", label: "Color",     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAS7_WSLSiJaYZocAfer-ZTXwtoH5T-lQaRJc6t816B_ZIeUodfdXPINzKYTGyOvGL4l59OkBfgJxiA5I0bLCQowBTsATNt2rLCHTWopI4iJ70ckeMq_HLCKdrcU_2Rr94wV5h7vwGoQDxPDM6caoZSdgYJXyCMORwF69oheML6k058NoOJd4jVaj7XFm1AXK2GE4PBYBPBM7qcsQLGCmTL4V-1A1d4B9HOy4s5xI3SQbtls6ul2Inv3aPSNZJt_mGSE1Oh3cKwjGY_" },
 ];
 
+const SEARCH_PLACEHOLDERS = [
+  "Search haircuts, beard trims...",
+  "Search facials, luxury spas...",
+  "Search hair color, hair spa...",
+  "Search 'Unisalon' or top salons...",
+  "Search grooming, styling, massage...",
+];
+
 export default function HomePage() {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
 
   const [geoError, setGeoError] = useState(false);
   const [showDistrictSelector, setShowDistrictSelector] = useState(false);
@@ -264,7 +280,7 @@ export default function HomePage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search salons..."
+                  placeholder={SEARCH_PLACEHOLDERS[placeholderIndex]}
                   className="w-full border-none p-0 bg-transparent text-[11px] md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none truncate pr-6"
                 />
                 <button type="submit" className="absolute right-3 text-text-secondary flex items-center">
