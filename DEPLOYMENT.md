@@ -84,7 +84,7 @@ We host the Elysia REST API on **Render** utilizing Bun's native execution.
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Server Service Key (Service Role JWT) |
 | `SUPABASE_ANON_KEY` | Supabase Public Client Key |
 | `RESEND_API_KEY` | Transactional email key from Resend dashboard |
-| `ADMIN_EMAILS` | Comma-separated list of admin emails (e.g., `mukund@unisalon.in`) |
+| `ADMIN_EMAILS` | Comma-separated list of admin emails (e.g., `mukund@unisalon.shop`) |
 | `HOLD_EXPIRY_SECONDS` | `90` |
 | `NODE_ENV` | `production` |
 
@@ -138,7 +138,7 @@ We deploy the three client interfaces as separate projects on **Vercel**.
 ## 5. Third-Party Integrations
 
 ### Resend Email setup
-1. Register on [Resend](https://resend.com) and add your domain (e.g. `unisalon.in`).
+1. Register on [Resend](https://resend.com) and add your domain (e.g. `unisalon.shop`).
 2. Verify domain ownership using the DNS TXT/MX records supplied in the Resend dashboard.
 3. Generate an API Key and add it to Render API's `RESEND_API_KEY` variable.
 
@@ -154,7 +154,7 @@ We use Google Maps for shop Geolocation searching.
 5. Click on the generated key to edit restrictions:
    * Under **Application restrictions**, choose **Websites**.
    * Under **Website restrictions**, add production referrers:
-     * `*.unisalon.in/*`
+     * `*.unisalon.shop/*`
      * `*.vercel.app/*` (for staging previews)
    * Under **API restrictions**, restrict key calls to only the 3 enabled Maps APIs.
 6. Provide this restricted key to your frontend apps using Vercel's `VITE_GOOGLE_MAPS_KEY` environment variable.

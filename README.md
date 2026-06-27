@@ -17,10 +17,10 @@
 
 | App | Description | URL |
 |---|---|---|
-| `apps/web` | Customer portal | unisalon.in |
-| `apps/shop` | Shop owner portal | shop.unisalon.in |
-| `apps/admin` | Admin dashboard | admin.unisalon.in |
-| `apps/api` | REST API | api.unisalon.in |
+| `apps/web` | Customer portal | unisalon.shop |
+| `apps/shop` | Shop owner portal | shop.unisalon.shop |
+| `apps/admin` | Admin dashboard | admin.unisalon.shop |
+| `apps/api` | REST API | api.unisalon.shop |
 
 ## Packages
 

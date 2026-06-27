@@ -11,7 +11,8 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
 });
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_bG92ZWQtbXVzdGFuZy0zNC5jbGVyay5hY2NvdW50cy5kZXYk";
+const rawKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = (rawKey && rawKey.trim() !== "") ? rawKey : "pk_test_bG92ZWQtbXVzdGFuZy0zNC5jbGVyay5hY2NvdW50cy5kZXYk";
 
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

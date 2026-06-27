@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = "UniSalon <no-reply@unisalon.in>";
+const FROM = "UniSalon <no-reply@unisalon.shop>";
 
 // ─────────────────────────────────────────────
 // Booking confirmation email to customer
@@ -64,13 +64,13 @@ export async function sendShopStatusEmail(
         <p>Your shop <strong>${shopName}</strong> has been approved and is now live on UniSalon.</p>
         <p>Customers can now find and book appointments at your shop.</p>
         <p>Log into your dashboard to manage bookings and your profile.</p>
-        <a href="https://shop.unisalon.in/dashboard" style="background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px">Go to Dashboard</a>
+        <a href="https://shop.unisalon.shop/dashboard" style="background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px">Go to Dashboard</a>
       `
       : `
         <h2>Hi ${ownerName},</h2>
         <p>Thank you for applying to UniSalon. After review, we were unable to approve <strong>${shopName}</strong> at this time.</p>
         ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
-        <p>Please update your profile and re-apply, or contact us at support@unisalon.in.</p>
+        <p>Please update your profile and re-apply, or contact us at support@unisalon.shop.</p>
       `,
   });
 }
