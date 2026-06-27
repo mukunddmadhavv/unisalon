@@ -19,26 +19,11 @@ interface Booking {
   services: Array<{ serviceName: string; durationMins: number }>;
 }
 
-interface StaffMember {
-  id: string;
-  name: string;
-  photoUrl?: string;
-  specialization?: string;
-  experience?: string;
-  isActive: boolean;
-}
-
 interface BookingsResponse {
   data: Booking[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-secondary-container text-on-secondary-container border border-on-secondary-container/20",
-  CONFIRMED: "bg-offer-bg text-offer-text border border-rating-green/20",
-  COMPLETED: "bg-blue-50 text-blue-700 border border-blue-200",
-  CANCELLED: "bg-red-50 text-red-700 border border-red-200",
-  NO_SHOW: "bg-gray-50 text-gray-700 border border-gray-200",
-};
+
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -76,13 +61,6 @@ export default function DashboardPage() {
     },
   });
 
-  const { data: staffList = [] } = useQuery<StaffMember[]>({
-    queryKey: ["staff"],
-    queryFn: async () => {
-      const res = await api.getStaff() as any;
-      return res.data ?? res;
-    },
-  });
 
   const { data: shopDetail } = useQuery<any>({
     queryKey: ["owner-shop"],
@@ -120,16 +98,8 @@ export default function DashboardPage() {
 
   const shopRating = shopDetail?.data?.rating ?? 4.9;
 
-  const getStaffRevenue = (staffId: string) => {
-    return allBookings
-      .filter((b) => b.status === "COMPLETED" && b.staffId === staffId)
-      .reduce((s, b) => s + b.totalAmount, 0) / 100;
-  };
 
-  const sortedStaff = [...staffList]
-    .map((s) => ({ ...s, revenue: getStaffRevenue(s.id) }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 3);
+
 
   return (
     <div className="space-y-6">
@@ -137,7 +107,7 @@ export default function DashboardPage() {
       {/* Welcome Header */}
       <section className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-text-primary tracking-tight">
+          <h1 className="font-display text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight">
             Luxe Salon Central
           </h1>
           <p className="font-sans text-xs text-text-secondary mt-1">
@@ -160,112 +130,76 @@ export default function DashboardPage() {
             className="sr-only peer"
           />
           <div className="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rating-green"></div>
-          <span className={`ml-3 font-display text-xs font-extrabold tracking-wider uppercase ${isLive ? 'text-rating-green' : 'text-text-secondary'}`}>
+          <span className={`ml-3 font-display text-xs font-extrabold tracking-wider uppercase peer-checked:text-rating-green ${isLive ? 'text-rating-green' : 'text-text-secondary'}`}>
             {isLive ? 'Live' : 'Offline'}
           </span>
         </label>
       </section>
 
-      {/* Stats Bento Grid */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
-          <span className="material-symbols-outlined text-text-secondary text-[20px]">calendar_today</span>
-          <span className="font-display text-2xl font-black text-text-primary">{allBookings.length}</span>
-          <span className="font-sans text-[11px] font-semibold text-text-secondary">Total Bookings</span>
+      {/* Stats Cards (Stitch Style) */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1 */}
+        <div className="bg-white border border-border-light p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <span className="material-symbols-outlined p-2 bg-surface-container rounded-lg text-primary">calendar_month</span>
+            <span className="font-label-sm text-[10px] font-bold text-rating-green bg-offer-bg px-2 py-1 rounded">+12%</span>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-lg text-xs font-bold text-text-secondary">Bookings</p>
+            <h4 className="font-headline-lg text-2xl font-black text-primary">{allBookings.length}</h4>
+          </div>
         </div>
-        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
-          <span className="material-symbols-outlined text-rating-green text-[20px]">payments</span>
-          <span className="font-display text-2xl font-black text-text-primary">₹{(dailyRevenue / 100).toLocaleString()}</span>
-          <span className="font-sans text-[11px] font-semibold text-text-secondary">Daily Revenue</span>
+        {/* Metric 2 */}
+        <div className="bg-white border border-border-light p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <span className="material-symbols-outlined p-2 bg-surface-container rounded-lg text-primary">payments</span>
+            <span className="font-label-sm text-[10px] font-bold text-rating-green bg-offer-bg px-2 py-1 rounded">+8%</span>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-lg text-xs font-bold text-text-secondary">Revenue</p>
+            <h4 className="font-headline-lg text-2xl font-black text-primary">₹{(dailyRevenue / 100).toLocaleString()}</h4>
+          </div>
         </div>
-        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
-          <span className="material-symbols-outlined text-[#fed65b] text-[20px]">schedule</span>
-          <span className="font-display text-2xl font-black text-text-primary">{avgServiceTime}m</span>
-          <span className="font-sans text-[11px] font-semibold text-text-secondary">Avg. Service Time</span>
+        {/* Metric 3 */}
+        <div className="bg-white border border-border-light p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <span className="material-symbols-outlined p-2 bg-surface-container rounded-lg text-primary">timer</span>
+            <span className="font-label-sm text-[10px] font-bold text-text-secondary bg-surface-container px-2 py-1 rounded">-5m avg</span>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-lg text-xs font-bold text-text-secondary">Service Time</p>
+            <h4 className="font-headline-lg text-2xl font-black text-primary">{avgServiceTime}m</h4>
+          </div>
         </div>
-        <div className="bg-white border border-border-light p-4 rounded-xl flex flex-col gap-1.5 shadow-sm">
-          <span className="material-symbols-outlined text-primary text-[20px]">star</span>
-          <span className="font-display text-2xl font-black text-text-primary">{shopRating}</span>
-          <span className="font-sans text-[11px] font-semibold text-text-secondary">Today's Rating</span>
+        {/* Metric 4 */}
+        <div className="bg-white border border-border-light p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <span className="material-symbols-outlined p-2 bg-surface-container rounded-lg text-rating-green" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            <span className="font-label-sm text-[10px] font-bold text-rating-green bg-offer-bg px-2 py-1 rounded">Excellent</span>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-lg text-xs font-bold text-text-secondary">Customer Rating</p>
+            <h4 className="font-headline-lg text-2xl font-black text-primary">{shopRating}</h4>
+          </div>
         </div>
       </section>
 
-      {/* Main Dashboard Panel layout */}
+      {/* Main Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Section: Pending Requests & Today's Schedule */}
+        {/* Center Section: Active Sessions / Schedule (Left Column) */}
         <div className="lg:col-span-2 space-y-6">
-          
-          {/* Pending Requests Section */}
-          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
-            <div className="flex justify-between items-end mb-4">
-              <div>
-                <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary">Pending Requests</h3>
-                <p className="font-sans text-xs text-text-secondary mt-0.5">{pendingBookings.length} bookings waiting</p>
+          <div className="bg-white border border-border-light rounded-xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
+              <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-primary">Active Sessions</h3>
+              <div className="flex gap-2">
+                <span className="bg-offer-bg text-offer-text text-[10px] px-2.5 py-1 rounded-full font-sans font-bold uppercase border border-rating-green/20">
+                  {confirmedToday.length} Confirmed Today
+                </span>
               </div>
-              <Link to="/bookings" className="text-primary font-sans text-xs font-bold border-b border-primary hover:opacity-80 transition-opacity">
-                View All
-              </Link>
             </div>
 
-            {pendingBookings.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-border-light rounded-xl bg-background">
-                <span className="material-symbols-outlined text-3xl text-text-secondary mb-1">done_all</span>
-                <p className="font-sans text-xs text-text-secondary font-semibold">No pending requests</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingBookings.map((booking) => (
-                  <div key={booking.id} className="border border-border-light p-4 rounded-xl shadow-sm bg-background transition-transform duration-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-border-light flex items-center justify-center font-display text-sm font-extrabold text-primary shadow-sm flex-shrink-0">
-                          {booking.user.name[0]}
-                        </div>
-                        <div>
-                          <h4 className="font-sans text-sm font-bold text-text-primary">{booking.user.name}</h4>
-                          <p className="font-sans text-xs text-text-secondary truncate mt-0.5">
-                            {booking.services.map((s) => s.serviceName).join(", ")}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1 text-primary">
-                            <span className="material-symbols-outlined text-[14px]">schedule</span>
-                            <span className="font-display text-[11px] font-extrabold">
-                              {booking.date === today ? "Today" : booking.date}, {booking.startTime}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-2.5">
-                      <button
-                        onClick={() => statusMutation.mutate({ id: booking.id, status: "CANCELLED" })}
-                        className="py-2 border border-border-light rounded-lg font-sans text-xs font-bold text-text-primary hover:bg-surface-container transition-colors"
-                      >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => statusMutation.mutate({ id: booking.id, status: "CONFIRMED" })}
-                        className="py-2 bg-primary text-white rounded-lg font-sans text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all"
-                      >
-                        Accept
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Today's Schedule timeline */}
-          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary">Today's Schedule</h3>
-              <span className="bg-offer-bg text-offer-text text-[10px] px-2 py-0.5 rounded-full font-sans font-bold uppercase border border-rating-green/20">
-                {confirmedToday.length} Confirmed
-              </span>
-            </div>
-
-            <div className="space-y-3">
+            <div className="divide-y divide-border-light">
               {todayBookings.length === 0 ? (
                 <div className="py-12 text-center flex flex-col items-center justify-center">
                   <span className="material-symbols-outlined text-4xl text-text-secondary mb-2">calendar_today</span>
@@ -274,88 +208,117 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 todayBookings.map((booking) => (
-                  <div key={booking.id} className="border border-border-light rounded-xl p-4 flex gap-4 bg-background hover:bg-white transition-colors shadow-sm">
-                    <div className="flex flex-col items-center justify-center min-w-[50px] border-r border-border-light pr-4">
-                      <span className="font-display text-lg font-black text-text-primary">
-                        {booking.startTime.split(":")[0]}
-                      </span>
-                      <span className="font-sans text-[10px] font-bold text-text-secondary uppercase">
-                        {Number(booking.startTime.split(":")[0]) >= 12 ? "PM" : "AM"}
-                      </span>
-                    </div>
-                    <div className="flex-1 flex justify-between items-center min-w-0">
-                      <div className="min-w-0 pr-2">
-                        <span className="font-sans text-sm font-bold text-text-primary truncate block">{booking.user.name}</span>
-                        <span className="font-sans text-xs text-text-secondary truncate block mt-0.5">
-                          {booking.services.map((s) => s.serviceName).join(", ")}
-                          {booking.staff && ` with ${booking.staff.name}`}
-                        </span>
+                  <div key={booking.id} className="p-6 flex items-center justify-between group hover:bg-surface transition-all duration-200">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center font-display text-sm font-bold text-text-secondary">
+                        {booking.user.name.split(" ").map(w => w[0]).join("")}
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full font-sans text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${STATUS_COLORS[booking.status]}`}>
-                        {booking.status}
-                      </span>
+                      <div>
+                        <h5 className="font-body-lg text-sm md:text-base font-bold text-primary">{booking.user.name}</h5>
+                        <p className="text-xs text-text-secondary">
+                          {booking.services.map((s) => s.serviceName).join(", ")} • <span className="text-primary font-bold">{booking.staff?.name || "Any Stylist"}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-body-md text-xs font-bold text-primary">{booking.startTime}</p>
+                      <div className="w-24 h-1 bg-surface-container rounded-full mt-2 overflow-hidden">
+                        <div className={`h-full ${booking.status === "COMPLETED" ? "bg-rating-green" : "bg-primary"} w-full transition-all`}></div>
+                      </div>
                     </div>
                   </div>
                 ))
               )}
             </div>
-          </section>
-
+          </div>
         </div>
 
-        {/* Right Section: Top Stylists & Quick Support */}
-        <div className="space-y-6">
-          
-          {/* Top Stylists Leaderboard */}
-          <section className="bg-white border border-border-light rounded-xl p-5 shadow-sm">
-            <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary mb-4">Top Stylists</h3>
-            {sortedStaff.length === 0 ? (
-              <div className="text-center py-6">
-                <span className="material-symbols-outlined text-3xl text-text-secondary mb-1">group</span>
-                <p className="font-sans text-xs text-text-secondary font-semibold">No staff listed yet</p>
-                <Link to="/staff" className="text-primary text-xs font-bold hover:underline block mt-2">
-                  Add Staff Members
-                </Link>
+        {/* Right Sidebar: Pending Requests */}
+        <aside className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-text-secondary">Pending Requests ({pendingBookings.length})</h3>
+            {pendingBookings.length > 0 && (
+              <span className="w-2 h-2 bg-error rounded-full animate-pulse"></span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {pendingBookings.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-border-light rounded-xl bg-white shadow-sm">
+                <span className="material-symbols-outlined text-3xl text-text-secondary mb-1">done_all</span>
+                <p className="font-sans text-xs text-text-secondary font-semibold">No pending requests</p>
               </div>
             ) : (
-              <div className="space-y-3.5">
-                {sortedStaff.map((staff, idx) => (
-                  <div key={staff.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px] font-black ${
-                        idx === 0 ? "bg-primary text-white" : "bg-surface-container-high text-text-secondary"
-                      }`}>
-                        {idx + 1}
-                      </div>
-                      <p className="font-sans text-sm font-bold text-text-primary">{staff.name}</p>
+              pendingBookings.map((booking) => (
+                <div key={booking.id} className="bg-white border border-border-light p-4 rounded-xl shadow-sm space-y-3">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center font-display text-sm font-black text-text-secondary shrink-0">
+                      {booking.user.name.split(" ").map(w => w[0]).join("")}
                     </div>
-                    <p className="font-display text-sm font-extrabold text-primary">₹{staff.revenue.toLocaleString()}</p>
+                    <div className="min-w-0">
+                      <h6 className="font-body-lg text-sm font-bold text-primary truncate">{booking.user.name}</h6>
+                      <p className="font-body-sm text-xs text-text-secondary truncate">{booking.services.map((s) => s.serviceName).join(", ")}</p>
+                      <p className="font-label-sm text-[10px] text-text-secondary mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>
+                        {booking.date === today ? "Today" : booking.date}, {booking.startTime}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => statusMutation.mutate({ id: booking.id, status: "CANCELLED" })}
+                      className="py-2 rounded-lg border border-border-light font-label-lg text-xs font-bold text-text-primary hover:bg-surface-container transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => statusMutation.mutate({ id: booking.id, status: "CONFIRMED" })}
+                      className="py-2 rounded-lg bg-primary text-white font-label-lg text-xs font-bold hover:opacity-90 transition-opacity"
+                    >
+                      Accept
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
-          </section>
-
-          {/* Micro-interaction support banner */}
-          <section className="bg-white border border-dashed border-border-light rounded-xl p-5 shadow-sm flex flex-col justify-between">
-            <div>
-              <p className="font-sans text-sm font-bold text-text-primary">Need help with UniSalon?</p>
-              <p className="font-sans text-xs text-text-secondary mt-1 leading-relaxed">
-                Our shop success team is available 24/7 to help you grow your salon business.
-              </p>
-            </div>
-            <a
-              href="mailto:support@unisalon.in"
-              className="mt-4 flex items-center gap-1.5 text-primary font-sans text-xs font-bold hover:gap-2.5 transition-all w-fit"
-            >
-              Contact Support
-              <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
-            </a>
-          </section>
-
-        </div>
+          </div>
+        </aside>
 
       </div>
+
+      {/* Bento Section: Quick Actions & Alerts */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+        <div className="bg-offer-bg border border-rating-green/20 p-6 rounded-xl relative overflow-hidden group shadow-sm">
+          <div className="relative z-10">
+            <span className="material-symbols-outlined text-rating-green mb-2">auto_awesome</span>
+            <h5 className="font-body-lg text-sm font-bold text-primary">Smart Suggestions</h5>
+            <p className="font-body-sm text-xs text-text-secondary mt-2">Create custom deals and styling bundles to drive bookings during low-occupancy hours.</p>
+            <Link to="/services" className="mt-4 inline-block px-4 py-2 bg-rating-green text-white rounded-lg font-label-lg text-xs font-bold shadow-sm">Manage Offers</Link>
+          </div>
+          <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-8xl">bolt</span>
+          </div>
+        </div>
+        
+        <div className="bg-white border border-border-light p-6 rounded-xl flex flex-col justify-between shadow-sm">
+          <div>
+            <span className="material-symbols-outlined text-primary mb-2">inventory_2</span>
+            <h5 className="font-body-lg text-sm font-bold text-primary">Inventory Alert</h5>
+            <p className="font-body-sm text-xs text-text-secondary mt-2">Items like Argan oils and styling waxes are running low. Tap to place supplies orders.</p>
+          </div>
+          <button className="mt-4 w-full py-2 border border-border-light rounded-lg font-label-lg text-xs font-bold hover:bg-surface-container transition-colors">Order Supplies</button>
+        </div>
+
+        <div className="bg-white border border-border-light p-6 rounded-xl flex flex-col justify-between shadow-sm">
+          <div>
+            <span className="material-symbols-outlined text-primary mb-2">badge</span>
+            <h5 className="font-body-lg text-sm font-bold text-primary">Staff Onboarding</h5>
+            <p className="font-body-sm text-xs text-text-secondary mt-2">Sync scheduling, bio pictures, and service categories for newly added stylists.</p>
+          </div>
+          <Link to="/staff" className="mt-4 w-full py-2 text-center border border-border-light rounded-lg font-label-lg text-xs font-bold hover:bg-surface-container transition-colors block">Setup Profiles</Link>
+        </div>
+      </section>
+
     </div>
   );
 }
