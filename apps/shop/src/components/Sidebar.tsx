@@ -22,7 +22,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex w-64 h-screen sticky left-0 top-0 bg-surface border-r border-surface-container-high flex-col py-6 z-50 select-none">
+    <aside className="hidden md:flex w-64 h-screen sticky left-0 top-0 bg-white border-r border-border-light flex-col py-6 z-50 select-none">
       {/* Brand */}
       <div className="px-6 mb-8 flex items-center gap-3">
         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
@@ -32,7 +32,7 @@ export function Sidebar() {
           <h1 className="font-display text-lg font-black text-primary leading-none">
             UniSalon
           </h1>
-          <p className="font-sans text-[10px] uppercase tracking-wider text-on-surface-variant opacity-70 mt-0.5">Shop Manager Portal</p>
+          <p className="font-sans text-[10px] uppercase tracking-wider text-text-secondary opacity-70 mt-0.5">Shop Manager Portal</p>
         </div>
       </div>
 
@@ -45,8 +45,8 @@ export function Sidebar() {
             className={({ isActive }) => 
               `flex items-center gap-3 px-4 py-3 rounded-lg font-sans text-sm font-semibold transition-all duration-200 hover:translate-x-1 ` +
               (isActive 
-                ? "bg-primary-container text-on-primary-container font-bold shadow-sm" 
-                : "text-on-surface-variant hover:bg-surface-container-high hover:text-primary")
+                ? "bg-primary text-white font-bold shadow-sm" 
+                : "text-text-secondary hover:bg-surface-container hover:text-primary")
             }
           >
             <span className="material-symbols-outlined text-[20px]">{icon}</span>
@@ -61,20 +61,20 @@ export function Sidebar() {
       </nav>
 
       {/* User info at bottom */}
-      <div className="px-3 pt-4 border-t border-surface-container-high mt-auto">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-surface-container-high">
+      <div className="px-3 pt-4 border-t border-border-light mt-auto">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border-light">
           <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm">
             {user?.email?.[0]?.toUpperCase() ?? "O"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-on-surface truncate">
+            <p className="text-xs font-bold text-text-primary truncate">
               {user?.email?.split("@")[0]}
             </p>
-            <p className="text-[10px] text-on-surface-variant font-semibold">Shop Owner</p>
+            <p className="text-[10px] text-text-secondary font-semibold">Shop Owner</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="p-1.5 hover:bg-surface-container-highest rounded-full text-on-surface-variant hover:text-error transition-all duration-150 active:scale-90"
+            className="p-1.5 hover:bg-surface-container rounded-full text-text-secondary hover:text-error transition-all duration-150 active:scale-90"
             title="Sign out"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
