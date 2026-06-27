@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { NotificationBell } from "./NotificationBell";
-import { useAuthStore } from "../store/authStore";
+import { useUser } from "@clerk/react";
 import { useNotifications } from "../hooks/useNotifications";
 
 interface DashboardLayoutProps {
@@ -37,7 +37,7 @@ export function PageHeader({ title, subtitle, actions }: DashboardLayoutProps) {
 }
 
 export function DashboardLayout() {
-  const { user } = useAuthStore();
+  const { user } = useUser();
   const { unreadCount } = useNotifications();
 
   return (
@@ -56,11 +56,11 @@ export function DashboardLayout() {
             <div className="h-8 w-[1px] bg-border-light hidden sm:block"></div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="font-sans text-sm font-bold text-text-primary">{user?.email?.split("@")[0]}</p>
+                <p className="font-sans text-sm font-bold text-text-primary">{user?.primaryEmailAddress?.emailAddress?.split("@")[0]}</p>
                 <p className="font-sans text-xs text-text-secondary">Shop Owner</p>
               </div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-sm border border-border-light">
-                {user?.email?.[0]?.toUpperCase() ?? "O"}
+                {user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? "O"}
               </div>
             </div>
           </div>

@@ -1,8 +1,6 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "./lib/supabase";
-import { useAuthStore } from "./store/authStore";
-import { DashboardLayout } from "./components/DashboardLayout";
+import { useAuth, useUser } from "@clerk/react";
 import { api } from "./lib/api";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -12,35 +10,28 @@ import StaffPage from "./pages/StaffPage";
 import BookingsPage from "./pages/BookingsPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuthStore();
-  if (loading) return (
+  const { isSignedIn, isLoaded } = useAuth();
+  if (!isLoaded) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff" }}>
       <div style={{ width: 32, height: 32, border: "3px solid #e4ebf3", borderTopColor: "#111111", borderRadius: "50%" }} />
     </div>
   );
-  if (!session) return <Navigate to="/auth/login" replace />;
+  if (!isSignedIn) return <Navigate to="/auth/login" replace />;
   return <>{children}</>;
 }
 
 export default function App() {
-  const { setSession } = useAuthStore();
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
-    const handleSession = (session: any) => {
-      setSession(session);
-      if (session?.user) {
-        // Automatically sync/register shop owner record in public database
-        api.registerOwner({
-          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Owner",
-          phone: session.user.user_metadata?.phone || "0000000000",
-        }).catch((err) => console.error("Auto-registration error:", err));
-      }
-    };
-
-    supabase.auth.getSession().then(({ data }) => handleSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => handleSession(session));
-    return () => subscription.unsubscribe();
-  }, [setSession]);
+    if (isLoaded && user) {
+      const name = user.fullName || user.primaryEmailAddress?.emailAddress?.split("@")[0] || "Owner";
+      const phone = user.primaryPhoneNumber?.phoneNumber || "0000000000";
+      // Automatically sync/register shop owner record in public database
+      api.registerOwner({ name, phone })
+        .catch((err) => console.error("Auto-registration error:", err));
+    }
+  }, [user, isLoaded]);
 
   return (
     <Routes>
@@ -61,3 +52,7 @@ export default function App() {
     </Routes>
   );
 }
+
+// Stub for DashboardLayout to satisfy routing, since it's imported dynamically or defined elsewhere
+import { DashboardLayout } from "./components/DashboardLayout";
+

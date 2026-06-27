@@ -1,15 +1,15 @@
-import { supabase } from "./supabase";
-
 const API = import.meta.env.VITE_API_URL as string;
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+  const token = (window as any).Clerk?.session
+    ? await (window as any).Clerk.session.getToken()
+    : null;
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
+
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = await getAuthHeaders();
@@ -58,8 +58,9 @@ export const api = {
 
   // ── Upload to Supabase Storage (via backend API to bypass RLS) ────
   async uploadFile(file: File, bucket: string, path: string): Promise<string> {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
+    const token = (window as any).Clerk?.session
+      ? await (window as any).Clerk.session.getToken()
+      : null;
 
     const formData = new FormData();
     formData.append("file", file);

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
+import { useUser, useClerk } from "@clerk/react";
 import { useNotifications } from "../hooks/useNotifications";
 
 const links = [
@@ -12,7 +12,8 @@ const links = [
 ];
 
 export function Sidebar() {
-  const { signOut, user } = useAuthStore();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
 
@@ -64,11 +65,11 @@ export function Sidebar() {
       <div className="px-3 pt-4 border-t border-border-light mt-auto">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border-light">
           <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm">
-            {user?.email?.[0]?.toUpperCase() ?? "O"}
+            {user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ?? "O"}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-text-primary truncate">
-              {user?.email?.split("@")[0]}
+              {user?.primaryEmailAddress?.emailAddress?.split("@")[0]}
             </p>
             <p className="text-[10px] text-text-secondary font-semibold">Shop Owner</p>
           </div>
