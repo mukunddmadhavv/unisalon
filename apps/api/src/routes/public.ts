@@ -34,10 +34,9 @@ export const publicRoutes = new Elysia({ prefix: "/api" })
 
       const skip = (Number(page) - 1) * Number(limit);
 
-      const where: Record<string, unknown> = {
+      const where: Record<string, any> = {
         status: "APPROVED",
         ...(district && { district: { contains: district, mode: "insensitive" } }),
-        ...(category && { category }),
         ...(search && {
           OR: [
             { name: { contains: search, mode: "insensitive" } },
@@ -50,6 +49,20 @@ export const publicRoutes = new Elysia({ prefix: "/api" })
           ],
         }),
       };
+
+      if (category) {
+        if (["MALE", "FEMALE", "UNISEX"].includes(category)) {
+          where.category = category;
+        } else {
+          where.services = {
+            some: {
+              category: category,
+              isActive: true,
+            },
+          };
+        }
+      }
+
 
       const [shops, total] = await Promise.all([
         prisma.shop.findMany({
