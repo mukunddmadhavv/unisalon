@@ -250,21 +250,38 @@ export default function HomePage() {
         
         {/* ── TOP BAR (PREMIUM HEADER) ── */}
         <header className="bg-white sticky top-0 w-full z-50 border-b border-border-light shadow-sm transition-colors duration-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 w-full">
-            {/* Logo */}
-            <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black shrink-0">
-              UNISALON
-            </Link>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3 flex flex-col md:flex-row md:items-center justify-between gap-2.5 md:gap-6 w-full">
+            
+            {/* Row 1 (Mobile logo + User button, desktop logo only) */}
+            <div className="flex items-center justify-between w-full md:w-auto shrink-0">
+              <Link to="/" className="font-headline-md text-xl md:text-2xl text-primary tracking-tighter hover:opacity-85 font-black">
+                UNISALON
+              </Link>
+              
+              {/* User actions for Mobile */}
+              <div className="md:hidden flex items-center gap-3">
+                {isSignedIn ? (
+                  <UserButton />
+                ) : (
+                  <Link
+                    to="/auth/login"
+                    className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </div>
+            </div>
 
-            {/* Search Input Box in Header */}
-            <div className="flex-1 max-w-xl mx-auto w-full">
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-white border border-border-light rounded-xl px-4 py-2 hover:border-primary transition-colors duration-200">
+            {/* Search Input Box (Full-width on mobile, max-w-xl centered on desktop) */}
+            <div className="flex-1 w-full max-w-full md:max-w-xl mx-auto order-3 md:order-2">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#f3f4f6] border border-transparent hover:border-primary rounded-xl px-4 py-2.5 transition-colors duration-200">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search for salons, services or more"
-                  className="w-full border-none p-0 bg-transparent text-xs text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
+                  className="w-full border-none p-0 bg-transparent text-xs md:text-sm text-text-primary focus:ring-0 placeholder:text-text-secondary/70 outline-none"
                 />
                 <button type="submit" className="absolute right-4 text-text-secondary flex items-center">
                   <span className="material-symbols-outlined text-[18px]">search</span>
@@ -272,9 +289,9 @@ export default function HomePage() {
               </form>
             </div>
 
-            {/* Actions & Navigation */}
-            <div className="flex items-center gap-6 shrink-0">
-              <nav className="hidden lg:flex items-center gap-8">
+            {/* Actions & Navigation (Hidden on mobile) */}
+            <div className="hidden md:flex items-center gap-6 shrink-0 order-2 md:order-3">
+              <nav className="flex items-center gap-8">
                 <Link to="/explore" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-xs font-bold uppercase tracking-wider">
                   <span className="material-symbols-outlined text-[18px]">local_offer</span>
                   Offers
@@ -283,7 +300,7 @@ export default function HomePage() {
 
               <div className="flex items-center gap-4">
                 {isSignedIn ? (
-                    <UserButton />
+                  <UserButton />
                 ) : (
                   <Link
                     to="/auth/login"
@@ -293,8 +310,8 @@ export default function HomePage() {
                   </Link>
                 )}
               </div>
-
             </div>
+
           </div>
         </header>
 
