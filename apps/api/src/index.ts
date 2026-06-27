@@ -57,7 +57,7 @@ const app = new Elysia()
 // Start expired hold cleanup cron (runs every 30s)
 startHoldCleanupCron();
 
-app.listen(PORT, () => {
+app.listen({ port: PORT, hostname: "0.0.0.0" }, () => {
   console.log(`🚀 UniSalon API running on http://localhost:${PORT}`);
   console.log(`📚 Swagger docs at http://localhost:${PORT}/docs`);
 });
