@@ -19,6 +19,9 @@ interface Shop {
   city: string;
   district: string;
   distanceKm?: number | null;
+  openTime?: string;
+  closeTime?: string;
+  services?: { price: number }[];
 }
 
 const CATEGORIES = [
@@ -508,7 +511,10 @@ export default function HomePage() {
 
                         <div className="flex items-center gap-1 mt-1 text-xs text-text-secondary font-medium">
                           <span className="material-symbols-outlined text-[14px]">schedule</span>
-                          <span>30-45 mins • ₹600 for two</span>
+                          <span>
+                            {shop.openTime} - {shop.closeTime}
+                            {shop.services && shop.services.length > 0 && ` • Starts at ₹${Math.round(Math.min(...shop.services.map(s => s.price)) / 100)}`}
+                          </span>
                         </div>
 
                         <p className="text-text-secondary text-[11px] mt-1 font-semibold uppercase tracking-wider text-secondary truncate">
