@@ -42,11 +42,12 @@ export default function LogsPage() {
 
   const getActionBadge = (action: string) => {
     const badges: Record<string, string> = {
-      APPROVE_SHOP: "bg-green-500/10 text-green-400 border-green-500/20",
-      REJECT_SHOP: "bg-red-500/10 text-red-400 border-red-500/20",
+      APPROVE_SHOP: "badge badge-approved",
+      REJECT_SHOP: "badge badge-rejected",
+      SUSPEND_SHOP: "badge badge-suspended",
     };
     return (
-      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badges[action] ?? "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
+      <span className={badges[action] ?? "badge bg-gray-100 text-gray-700 border border-gray-200"}>
         {action.replace("_", " ")}
       </span>
     );
@@ -60,11 +61,11 @@ export default function LogsPage() {
       />
 
       {/* Filter panel */}
-      <div className="card p-4 flex items-center justify-between gap-4">
+      <div className="card p-4 flex items-center justify-between gap-4 bg-white border border-surface-border">
         <div className="flex items-center gap-2">
           <Filter size={14} className="text-gray-500" />
-          <span className="text-sm text-gray-400">Filter Action:</span>
-          <select className="input py-1.5 px-3 text-xs w-44" value={action} onChange={handleActionChange}>
+          <span className="text-sm text-gray-700 font-medium">Filter Action:</span>
+          <select className="input py-1.5 px-3 text-xs w-44 bg-white border border-surface-border text-gray-900" value={action} onChange={handleActionChange}>
             {ACTIONS.map((act) => (
               <option key={act} value={act}>
                 {act === "ALL" ? "All Actions" : act.replace("_", " ")}
@@ -75,22 +76,22 @@ export default function LogsPage() {
       </div>
 
       {/* Logs Table Card */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden bg-white border border-surface-border">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-surface-muted border-t-brand-500 rounded-full animate-spin" />
           </div>
         ) : logs.length === 0 ? (
           <div className="p-16 text-center text-gray-500">
-            <Clipboard size={36} className="mx-auto mb-3 text-gray-600" />
-            <p className="font-medium text-white">No logs found</p>
-            <p className="text-sm mt-1">There are no logged operations matching this filter query.</p>
+            <Clipboard size={36} className="mx-auto mb-3 text-gray-450" />
+            <p className="font-semibold text-gray-900 text-lg">No logs found</p>
+            <p className="text-sm mt-1 text-gray-500">There are no logged operations matching this filter query.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-surface-border bg-surface/50 text-gray-400 text-xs font-semibold uppercase">
+                <tr className="border-b border-surface-border bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider">
                   <th className="p-4 pl-6">Timestamp</th>
                   <th className="p-4">Action</th>
                   <th className="p-4">Target Details</th>
@@ -100,11 +101,11 @@ export default function LogsPage() {
               </thead>
               <tbody className="divide-y divide-surface-border">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-surface/20 transition-colors text-sm text-gray-300">
+                  <tr key={log.id} className="hover:bg-gray-50/50 transition-colors text-sm text-gray-700">
                     {/* Timestamp */}
                     <td className="p-4 pl-6">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={13} className="text-gray-600" />
+                      <div className="flex items-center gap-2 text-gray-800 font-medium">
+                        <Calendar size={14} className="text-gray-400" />
                         <span>{format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss")}</span>
                       </div>
                     </td>
@@ -119,19 +120,19 @@ export default function LogsPage() {
                       {log.targetType === "SHOP" && log.shop ? (
                         <div>
                           <span className="text-gray-500 text-xs">Salon: </span>
-                          <span className="font-semibold text-white">{log.shop.name}</span>
+                          <span className="font-bold text-gray-900">{log.shop.name}</span>
                         </div>
                       ) : (
                         <div>
                           <span className="text-gray-500 text-xs">{log.targetType}: </span>
-                          <span className="text-white font-medium">{log.targetId.substring(0, 12)}...</span>
+                          <span className="text-gray-900 font-bold">{log.targetId.substring(0, 12)}...</span>
                         </div>
                       )}
                     </td>
 
                     {/* Admin UID */}
                     <td className="p-4">
-                      <code className="text-xs text-brand-400 bg-brand-500/5 px-2 py-0.5 rounded border border-brand-500/10">
+                      <code className="text-xs text-gray-750 bg-gray-50 px-2.5 py-1 rounded border border-gray-200 font-mono">
                         {log.adminId.substring(0, 10)}...
                       </code>
                     </td>
@@ -139,21 +140,21 @@ export default function LogsPage() {
                     {/* Metadata Context */}
                     <td className="p-4 pr-6">
                       {log.metadata && typeof log.metadata === "object" ? (
-                        <div className="text-xs text-gray-400 space-y-0.5 max-w-sm">
+                        <div className="text-xs text-gray-700 space-y-0.5 max-w-sm">
                           {log.metadata.reason && (
                             <div>
-                              <span className="font-semibold text-red-400/90">Reason: </span>
-                              <span>"{log.metadata.reason}"</span>
+                              <span className="font-bold text-red-700">Reason: </span>
+                              <span className="italic">"{log.metadata.reason}"</span>
                             </div>
                           )}
                           {!log.metadata.reason && (
-                            <pre className="text-[10px] text-gray-500 overflow-x-auto">
+                            <pre className="text-[10px] text-gray-600 bg-gray-50/50 p-1.5 rounded border border-gray-150 overflow-x-auto font-mono">
                               {JSON.stringify(log.metadata)}
                             </pre>
                           )}
                         </div>
                       ) : (
-                        <span className="text-gray-600">-</span>
+                        <span className="text-gray-500">-</span>
                       )}
                     </td>
                   </tr>
@@ -165,19 +166,19 @@ export default function LogsPage() {
 
         {/* Simple pagination */}
         {logs.length >= 30 && (
-          <div className="p-4 border-t border-surface-border flex items-center justify-end gap-2">
+          <div className="p-4 border-t border-surface-border flex items-center justify-end gap-3 bg-gray-50">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-lg border border-surface-border text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              className="p-1.5 rounded-lg border border-surface-border text-gray-600 hover:text-black hover:bg-gray-100 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:bg-transparent transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs text-gray-300">Page {page}</span>
+            <span className="text-xs text-gray-700 font-semibold">Page {page}</span>
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={logs.length < 30}
-              className="p-1.5 rounded-lg border border-surface-border text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              className="p-1.5 rounded-lg border border-surface-border text-gray-600 hover:text-black hover:bg-gray-100 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:bg-transparent transition-colors"
             >
               <ChevronRight size={16} />
             </button>

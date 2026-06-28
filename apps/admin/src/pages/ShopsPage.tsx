@@ -160,12 +160,12 @@ export default function ShopsPage() {
       />
 
       {/* Filters Panel */}
-      <div className="card p-4 flex flex-col md:flex-row items-center gap-4">
+      <div className="card p-4 flex flex-col md:flex-row items-center gap-4 bg-white border border-surface-border">
         {/* Search */}
         <div className="relative flex-1 w-full">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
-            className="input pl-9 py-2 text-sm"
+            className="input pl-9 py-2 text-sm bg-white border border-surface-border text-gray-900"
             placeholder="Search shops by name..."
             value={search}
             onChange={handleSearchChange}
@@ -175,7 +175,7 @@ export default function ShopsPage() {
         {/* Status Filter */}
         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
           <Filter size={14} className="text-gray-500" />
-          <select className="input py-2 text-sm w-full md:w-40" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+          <select className="input py-2 text-sm w-full md:w-40 bg-white border border-surface-border text-gray-900" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
             <option value="APPROVED">Live on Web</option>
             <option value="PENDING">Pending Approval</option>
             <option value="SUSPENDED">Paused</option>
@@ -187,7 +187,7 @@ export default function ShopsPage() {
         {/* Category Filter */}
         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
           <Filter size={14} className="text-gray-500" />
-          <select className="input py-2 text-sm w-full md:w-36" value={category} onChange={handleCategoryChange}>
+          <select className="input py-2 text-sm w-full md:w-36 bg-white border border-surface-border text-gray-900" value={category} onChange={handleCategoryChange}>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c === "ALL" ? "All Categories" : c}
@@ -198,22 +198,22 @@ export default function ShopsPage() {
       </div>
 
       {/* Table Card */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden bg-white border border-surface-border">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-surface-muted border-t-brand-500 rounded-full animate-spin" />
           </div>
         ) : shops.length === 0 ? (
           <div className="p-16 text-center text-gray-500">
-            <Store size={36} className="mx-auto mb-3 text-gray-600" />
-            <p className="font-medium text-white">No active shops found</p>
-            <p className="text-sm mt-1">Try modifying your search query or status filter parameters.</p>
+            <Store size={36} className="mx-auto mb-3 text-gray-400" />
+            <p className="font-semibold text-gray-900 text-lg">No active shops found</p>
+            <p className="text-sm mt-1 text-gray-500">Try modifying your search query or status filter parameters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-surface-border bg-surface/50 text-gray-400 text-xs font-semibold uppercase">
+                <tr className="border-b border-surface-border bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider">
                   <th className="p-4 pl-6">Salon Details</th>
                   <th className="p-4">Owner Info</th>
                   <th className="p-4">Stats</th>
@@ -225,41 +225,41 @@ export default function ShopsPage() {
               </thead>
               <tbody className="divide-y divide-surface-border">
                 {shops.map((shop) => (
-                  <tr key={shop.id} className="hover:bg-surface/20 transition-colors text-sm text-gray-300">
+                  <tr key={shop.id} className="hover:bg-gray-50/50 transition-colors text-sm text-gray-700">
                     {/* Name & Category */}
                     <td className="p-4 pl-6">
-                      <div className="font-semibold text-white">{shop.name}</div>
-                      <div className="text-xs text-brand-400 mt-0.5">{shop.category.replace("_", " ")}</div>
+                      <div className="font-bold text-gray-900 text-base">{shop.name}</div>
+                      <div className="text-xs text-brand-600 mt-1 font-semibold">{shop.category.replace("_", " ")}</div>
                     </td>
 
                     {/* Owner Details */}
                     <td className="p-4">
-                      <div className="font-medium text-white">{shop.owner.name}</div>
-                      <div className="text-xs text-gray-500 mt-0.5 flex flex-col gap-0.5">
-                        <span className="flex items-center gap-1"><Mail size={10} /> {shop.owner.email}</span>
-                        <span className="flex items-center gap-1"><Phone size={10} /> {shop.owner.phone}</span>
+                      <div className="font-semibold text-gray-900">{shop.owner.name}</div>
+                      <div className="text-xs text-gray-600 mt-1 flex flex-col gap-1">
+                        <span className="flex items-center gap-1"><Mail size={12} className="text-gray-400" /> {shop.owner.email}</span>
+                        <span className="flex items-center gap-1"><Phone size={12} className="text-gray-400" /> {shop.owner.phone}</span>
                       </div>
                     </td>
 
                     {/* Stats counts */}
                     <td className="p-4">
-                      <div className="text-xs space-y-1">
-                        <div><span className="text-gray-400">Services:</span> <span className="font-semibold text-white">{shop._count.services}</span></div>
-                        <div><span className="text-gray-400">Staff members:</span> <span className="font-semibold text-white">{shop._count.staff}</span></div>
-                        <div><span className="text-gray-400">Bookings:</span> <span className="font-semibold text-white">{shop._count.bookings}</span></div>
+                      <div className="text-xs space-y-1 text-gray-600">
+                        <div><span className="text-gray-500">Services:</span> <span className="font-bold text-gray-900">{shop._count.services}</span></div>
+                        <div><span className="text-gray-500">Staff members:</span> <span className="font-bold text-gray-900">{shop._count.staff}</span></div>
+                        <div><span className="text-gray-500">Bookings:</span> <span className="font-bold text-gray-900">{shop._count.bookings}</span></div>
                       </div>
                     </td>
 
                     {/* Location */}
                     <td className="p-4">
-                      <div className="text-white">{shop.city}</div>
+                      <div className="text-gray-900 font-semibold">{shop.city}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{shop.district}</div>
                     </td>
 
                     {/* Creation date */}
                     <td className="p-4">
-                      <div className="flex items-center gap-1.5 text-gray-400">
-                        <Calendar size={13} className="text-gray-600" />
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        <Calendar size={14} className="text-gray-400" />
                         <span>{format(new Date(shop.createdAt), "MMM d, yyyy")}</span>
                       </div>
                     </td>
@@ -267,22 +267,22 @@ export default function ShopsPage() {
                     {/* Status Badge */}
                     <td className="p-4">
                       {shop.status === "APPROVED" && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-500/10 text-green-400 border-green-500/20">
+                        <span className="badge badge-approved">
                           LIVE ON WEB
                         </span>
                       )}
                       {shop.status === "SUSPENDED" && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                        <span className="badge badge-suspended">
                           PAUSED
                         </span>
                       )}
                       {shop.status === "PENDING" && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-orange-500/10 text-orange-400 border-orange-500/20">
+                        <span className="badge badge-pending">
                           PENDING
                         </span>
                       )}
                       {shop.status === "REJECTED" && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-500/10 text-red-400 border-red-500/20">
+                        <span className="badge badge-rejected">
                           REJECTED
                         </span>
                       )}
@@ -290,7 +290,7 @@ export default function ShopsPage() {
 
                     {/* Actions */}
                     <td className="p-4 pr-6 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/shops/${shop.id}/manage`}
                           className="bg-brand-500 hover:bg-brand-600 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold shadow-sm transition-all"
@@ -306,7 +306,7 @@ export default function ShopsPage() {
                               }
                             }}
                             disabled={suspendMutation.isPending}
-                            className="bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-yellow-500/20 transition-all disabled:opacity-50"
+                            className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-yellow-200 transition-all disabled:opacity-50"
                           >
                             Pause
                           </button>
@@ -318,7 +318,7 @@ export default function ShopsPage() {
                               resumeMutation.mutate(shop.id);
                             }}
                             disabled={resumeMutation.isPending}
-                            className="bg-green-600/20 hover:bg-green-600/30 text-green-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-green-500/20 transition-all disabled:opacity-50"
+                            className="bg-green-50 hover:bg-green-100 text-green-800 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-green-200 transition-all disabled:opacity-50"
                           >
                             Resume
                           </button>
@@ -331,7 +331,7 @@ export default function ShopsPage() {
                             }
                           }}
                           disabled={deleteMutation.isPending}
-                          className="bg-red-600/15 hover:bg-red-600/30 text-red-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-red-500/20 transition-all disabled:opacity-50"
+                          className="bg-red-50 hover:bg-red-100 text-red-800 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-red-200 transition-all disabled:opacity-50"
                         >
                           Delete
                         </button>
@@ -346,28 +346,28 @@ export default function ShopsPage() {
 
         {/* Pagination Panel */}
         {total > 20 && (
-          <div className="p-4 border-t border-surface-border flex items-center justify-between">
-            <span className="text-xs text-gray-500">
-              Showing <span className="font-medium text-white">{(page - 1) * 20 + 1}</span> to{" "}
-              <span className="font-medium text-white">{Math.min(total, page * 20)}</span> of{" "}
-              <span className="font-medium text-white">{total}</span> shops
+          <div className="p-4 border-t border-surface-border flex items-center justify-between bg-gray-50">
+            <span className="text-xs text-gray-600">
+              Showing <span className="font-semibold text-gray-900">{(page - 1) * 20 + 1}</span> to{" "}
+              <span className="font-semibold text-gray-900">{Math.min(total, page * 20)}</span> of{" "}
+              <span className="font-semibold text-gray-900">{total}</span> shops
             </span>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-1.5 rounded-lg border border-surface-border text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+                className="p-1.5 rounded-lg border border-surface-border text-gray-600 hover:text-black hover:bg-gray-100 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:bg-transparent transition-colors"
               >
                 <ChevronLeft size={16} />
               </button>
-              <span className="text-xs text-gray-300">
+              <span className="text-xs text-gray-700 font-medium">
                 Page {page} of {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-1.5 rounded-lg border border-surface-border text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+                className="p-1.5 rounded-lg border border-surface-border text-gray-600 hover:text-black hover:bg-gray-100 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:bg-transparent transition-colors"
               >
                 <ChevronRight size={16} />
               </button>
@@ -378,13 +378,13 @@ export default function ShopsPage() {
 
       {/* Onboard Salon Modal */}
       {showOnboardModal && (
-        <div className="fixed inset-0 bg-black/75 z-[100] backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-surface-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/70 z-[100] backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-surface-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-surface-border">
-              <h2 className="font-bold text-lg text-white">Onboard Partner Salon</h2>
+              <h2 className="font-bold text-lg text-gray-900">Onboard Partner Salon</h2>
               <button
                 onClick={() => setShowOnboardModal(false)}
-                className="p-1.5 hover:bg-surface/30 rounded-lg text-gray-400 hover:text-white"
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-800 transition-colors"
               >
                 <X size={16} />
               </button>
@@ -392,24 +392,24 @@ export default function ShopsPage() {
 
             {onboardSuccess ? (
               <div className="p-6 space-y-6 text-center">
-                <div className="w-12 h-12 bg-green-500/10 text-green-400 border border-green-500/25 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 bg-green-50 text-green-600 border border-green-200 rounded-full flex items-center justify-center mx-auto">
                   <Check size={24} />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-bold text-white text-base">Salon Onboarded Successfully!</h3>
-                  <p className="text-gray-400 text-xs px-6">
+                  <h3 className="font-bold text-gray-900 text-base">Salon Onboarded Successfully!</h3>
+                  <p className="text-gray-500 text-xs px-6">
                     The salon is created in our database. Give this invitation activation code to the owner so they can claim their dashboard.
                   </p>
                 </div>
 
-                <div className="bg-surface-container/60 border border-surface-border rounded-lg p-4 flex items-center justify-between gap-4 max-w-sm mx-auto">
+                <div className="bg-gray-50 border border-surface-border rounded-lg p-4 flex items-center justify-between gap-4 max-w-sm mx-auto">
                   <div className="text-left">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Invitation Code</span>
-                    <span className="font-headline font-black text-xl text-white tracking-widest">{generatedCode}</span>
+                    <span className="font-sans font-black text-xl text-gray-900 tracking-widest">{generatedCode}</span>
                   </div>
                   <button
                     onClick={handleCopyCode}
-                    className="p-2 border border-surface-border hover:bg-surface/30 rounded-lg text-gray-400 hover:text-white transition-colors"
+                    className="p-2 border border-surface-border hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-850 transition-colors"
                   >
                     <Copy size={16} />
                   </button>
@@ -427,33 +427,33 @@ export default function ShopsPage() {
             ) : (
               <form onSubmit={handleOnboardSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
                 <div className="space-y-4">
-                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pb-1">Owner Contact</h3>
+                  <h3 className="font-bold text-xs text-gray-700 uppercase tracking-widest border-b border-surface-border pb-1">Owner Contact</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Name</label>
-                      <input name="ownerName" className="input py-2 text-xs w-full" required placeholder="e.g. Anil Sharma" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Owner Name</label>
+                      <input name="ownerName" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="e.g. Anil Sharma" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Phone</label>
-                      <input name="ownerPhone" className="input py-2 text-xs w-full" required placeholder="10-digit number" pattern="[0-9]{10}" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Owner Phone</label>
+                      <input name="ownerPhone" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="10-digit number" pattern="[0-9]{10}" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Email (Optional)</label>
-                      <input name="ownerEmail" type="email" className="input py-2 text-xs w-full" placeholder="e.g. sharma.salon@gmail.com" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Owner Email (Optional)</label>
+                      <input name="ownerEmail" type="email" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" placeholder="e.g. sharma.salon@gmail.com" />
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Profile</h3>
+                  <h3 className="font-bold text-xs text-gray-700 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Profile</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Salon Name</label>
-                      <input name="salonName" className="input py-2 text-xs w-full" required placeholder="e.g. Royal Hair Cut" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Salon Name</label>
+                      <input name="salonName" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="e.g. Royal Hair Cut" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Category</label>
-                      <select name="salonCategory" className="input py-2 text-xs w-full">
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Category</label>
+                      <select name="salonCategory" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border">
                         <option value="UNISEX">UNISEX</option>
                         <option value="MALE">MALE</option>
                         <option value="FEMALE">FEMALE</option>
@@ -461,16 +461,16 @@ export default function ShopsPage() {
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Address</h3>
+                  <h3 className="font-bold text-xs text-gray-700 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Address</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">State</label>
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">State</label>
                       <select
                         name="state"
                         value={onboardState}
                         onChange={handleStateChange}
-                        className="input py-2 text-xs w-full"
+                        className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border"
                         required
                       >
                         <option value="">Select State</option>
@@ -478,10 +478,10 @@ export default function ShopsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">District</label>
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">District</label>
                       <select
                         name="district"
-                        className="input py-2 text-xs w-full"
+                        className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border"
                         required
                       >
                         <option value="">Select District</option>
@@ -489,16 +489,16 @@ export default function ShopsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">City</label>
-                      <input name="city" className="input py-2 text-xs w-full" required placeholder="e.g. Deoria" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">City</label>
+                      <input name="city" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="e.g. Deoria" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pincode</label>
-                      <input name="pincode" className="input py-2 text-xs w-full" required placeholder="6-digit pincode" pattern="[0-9]{6}" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Pincode</label>
+                      <input name="pincode" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="6-digit pincode" pattern="[0-9]{6}" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Full Street Address</label>
-                      <input name="address" className="input py-2 text-xs w-full" required placeholder="Building, Street, Landmark" />
+                      <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">Full Street Address</label>
+                      <input name="address" className="input py-2 text-xs w-full bg-white text-gray-900 border border-surface-border" required placeholder="Building, Street, Landmark" />
                     </div>
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function ShopsPage() {
                   <button
                     type="button"
                     onClick={() => setShowOnboardModal(false)}
-                    className="bg-transparent text-gray-400 border border-surface-border text-xs px-4 py-2 rounded-lg hover:text-white"
+                    className="bg-transparent text-gray-700 border border-surface-border text-xs px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
