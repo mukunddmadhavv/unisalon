@@ -225,7 +225,7 @@ export default function ShopDetailPage() {
       </header>
 
       {/* Hero Section Carousel */}
-      <section className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden bg-gray-150">
+      <section className="relative w-full aspect-[16/9] md:max-h-[500px] overflow-hidden bg-gray-150">
         {slides.length > 0 ? (
           <div 
             className="w-full h-full relative"
@@ -415,7 +415,7 @@ export default function ShopDetailPage() {
                     </div>
 
                     {/* Add Image & Button block */}
-                    <div className="relative w-24 h-24 flex-shrink-0">
+                    <div className="relative w-28 md:w-32 aspect-[16/9] flex-shrink-0">
                       <img
                         className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all duration-500 border border-gray-100"
                         alt={svc.name}
