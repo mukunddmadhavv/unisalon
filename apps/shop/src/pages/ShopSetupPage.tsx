@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Compass, ChevronLeft, Save } from "lucide-react";
-import { ImageCropperModal } from "@unisalon/ui";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
@@ -32,8 +31,6 @@ export default function ShopSetupPage() {
   const [step, setStep] = useState(1);
   const [galleryImages, setGalleryImages] = useState<string[]>(Array(10).fill(""));
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
-  const [cropModalSrc, setCropModalSrc] = useState<string | null>(null);
-  const [cropModalIndex, setCropModalIndex] = useState<number | null>(null);
 
   const [form, setForm] = useState<FormState>({
     name: "",
@@ -117,7 +114,7 @@ export default function ShopSetupPage() {
     );
   };
 
-  const handleUploadImageClick = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadImageClick = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -125,24 +122,8 @@ export default function ShopSetupPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModalSrc(reader.result as string);
-      setCropModalIndex(index);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const handleCropComplete = async (blob: Blob) => {
-    if (cropModalIndex === null) return;
-    const index = cropModalIndex;
-    setCropModalSrc(null);
-    setCropModalIndex(null);
-
     setUploadingIndex(index);
     try {
-      const file = new File([blob], `image_${Date.now()}.jpg`, { type: 'image/jpeg' });
       const path = `shops/${existingShop?.id || "temp"}/gallery_${index}_${Date.now()}`;
       const url = await api.uploadFile(file, "shop-images", path);
       
@@ -157,6 +138,8 @@ export default function ShopSetupPage() {
     } finally {
       setUploadingIndex(null);
     }
+    
+    e.target.value = '';
   };
 
   const handleRemoveImageClick = (index: number) => {
@@ -553,17 +536,6 @@ export default function ShopSetupPage() {
             </section>
           </div>
         </div>
-        {cropModalSrc && (
-          <ImageCropperModal
-            imageSrc={cropModalSrc}
-            onClose={() => {
-              setCropModalSrc(null);
-              setCropModalIndex(null);
-            }}
-            onCropComplete={handleCropComplete}
-            aspectRatio={16 / 9}
-          />
-        )}
       </>
     );
   }
@@ -931,17 +903,6 @@ export default function ShopSetupPage() {
           </div>
         </div>
       </div>
-      {cropModalSrc && (
-        <ImageCropperModal
-          imageSrc={cropModalSrc}
-          onClose={() => {
-            setCropModalSrc(null);
-            setCropModalIndex(null);
-          }}
-          onCropComplete={handleCropComplete}
-          aspectRatio={16 / 9}
-        />
-      )}
     </>
   );
 }
