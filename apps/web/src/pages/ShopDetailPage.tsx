@@ -167,7 +167,7 @@ export default function ShopDetailPage() {
   );
 
   const gallery = shop.images?.filter((img) => img && img.trim() !== "") ?? [];
-  const slides = gallery.length > 0 ? gallery : (shop.coverImage ? [shop.coverImage] : []);
+  const slides = shop.coverImage ? [shop.coverImage, ...gallery] : gallery;
 
   const minSwipeDistance = 50;
   const onTouchStart = (e: React.TouchEvent) => {

@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0"
+    "@prisma/client": "^6.9.0",
+    "@supabase/supabase-js": "^2.108.2"
   },
   "devDependencies": {
     "prisma": "^6.9.0",
