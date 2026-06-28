@@ -65,4 +65,24 @@ export const api = {
     const q = new URLSearchParams(params as Record<string, string>).toString();
     return request<any>(`/api/admin/logs${q ? `?${q}` : ""}`);
   },
+
+  // ── Admin: Onboard Shop ─────────────────────────────────────────────
+  onboardShop: (data: any) => request<any>("/api/admin/shops/onboard", { method: "POST", body: JSON.stringify(data) }),
+
+  // ── Admin: Shop/Owner Manage Proxy ──────────────────────────────────
+  getShopForAdmin: (shopId: string) => request<any>(`/api/owner/shop?shopId=${shopId}`),
+  updateShopForAdmin: (id: string, data: any) => request<any>(`/api/owner/shops/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  
+  getStaffForAdmin: (shopId: string) => request<any>(`/api/owner/staff?shopId=${shopId}`),
+  addStaffForAdmin: (data: any) => request<any>("/api/owner/staff", { method: "POST", body: JSON.stringify(data) }),
+  updateStaffForAdmin: (id: string, data: any) => request<any>(`/api/owner/staff/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteStaffForAdmin: (id: string) => request<any>(`/api/owner/staff/${id}`, { method: "DELETE" }),
+
+  getServicesForAdmin: (shopId: string) => request<any>(`/api/owner/services?shopId=${shopId}`),
+  addServiceForAdmin: (data: any) => request<any>("/api/owner/services", { method: "POST", body: JSON.stringify(data) }),
+  updateServiceForAdmin: (id: string, data: any) => request<any>(`/api/owner/services/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteServiceForAdmin: (id: string) => request<any>(`/api/owner/services/${id}`, { method: "DELETE" }),
+
+  // ── Admin: Onboarded Invite Codes ───────────────────────────────
+  getOnboardedCodes: () => request<any>("/api/admin/onboarded-codes"),
 };

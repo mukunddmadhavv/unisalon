@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { prisma } from "@unisalon/db";
 import { requireAdmin } from "../middleware/auth";
 import { sendShopStatusEmail } from "../lib/email";
+import slugify from "slugify";
 
 const auth = requireAdmin();
 
@@ -175,4 +176,130 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       return { success: true, data: logs };
     },
     { query: t.Object({ page: t.Optional(t.String()), action: t.Optional(t.String()) }) }
+  )
+
+  // ── Onboard shop with claim code ──────────────────────────────────
+  .post(
+    "/shops/onboard",
+    async ({ body, auth }) => {
+      const code = `US-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const claimCodeStr = `claim_code:${code}`;
+      const placeholderEmail = `unclaimed_${code.toLowerCase()}@unisalon-partner.com`;
+      const ownerEmail = body.ownerEmail ? body.ownerEmail : placeholderEmail;
+
+      const shopOwner = await prisma.shopOwner.create({
+        data: {
+          supabaseId: claimCodeStr,
+          email: ownerEmail,
+          name: body.ownerName,
+          phone: body.ownerPhone,
+        },
+      });
+
+      const baseSlug = slugify(body.salonName, { lower: true, strict: true });
+      let slug = baseSlug;
+      let counter = 1;
+      while (await prisma.shop.findUnique({ where: { slug } })) {
+        slug = `${baseSlug}-${counter++}`;
+      }
+
+      const shop = await prisma.shop.create({
+        data: {
+          ownerId: shopOwner.id,
+          name: body.salonName,
+          slug,
+          category: body.category as any,
+          address: body.address,
+          city: body.city,
+          district: body.district,
+          state: body.state,
+          pincode: body.pincode,
+          latitude: body.latitude ?? null,
+          longitude: body.longitude ?? null,
+          openTime: body.openTime ?? "09:00",
+          closeTime: body.closeTime ?? "21:00",
+          workingDays: body.workingDays ?? ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+          status: "APPROVED",
+          isVerified: true,
+        },
+      });
+
+      await prisma.adminLog.create({
+        data: {
+          adminId: auth.supabaseId,
+          action: "ONBOARD_SHOP",
+          targetType: "SHOP",
+          targetId: shop.id,
+          shopId: shop.id,
+          metadata: { claimCode: code },
+        },
+      });
+
+      return { success: true, data: { shop, claimCode: code } };
+    },
+    {
+      body: t.Object({
+        ownerName: t.String({ minLength: 1 }),
+        ownerEmail: t.Optional(t.String()),
+        ownerPhone: t.String({ minLength: 10 }),
+        salonName: t.String({ minLength: 1 }),
+        category: t.Union([t.Literal("MALE"), t.Literal("FEMALE"), t.Literal("UNISEX")]),
+        address: t.String({ minLength: 1 }),
+        city: t.String({ minLength: 1 }),
+        district: t.String({ minLength: 1 }),
+        state: t.String({ minLength: 1 }),
+        pincode: t.String({ minLength: 6 }),
+        latitude: t.Optional(t.Number()),
+        longitude: t.Optional(t.Number()),
+        openTime: t.Optional(t.String()),
+        closeTime: t.Optional(t.String()),
+        workingDays: t.Optional(t.Array(t.String())),
+      }),
+    }
+  )
+
+  // ── Onboarded claim codes and status ──────────────────────────────
+  .get(
+    "/onboarded-codes",
+    async () => {
+      const logs = await prisma.adminLog.findMany({
+        where: { action: "ONBOARD_SHOP" },
+        include: {
+          shop: {
+            include: {
+              owner: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const items = logs.map((log) => {
+        const claimCode = (log.metadata as any)?.claimCode ?? "UNKNOWN";
+        const shop = log.shop;
+        const isClaimed = shop ? !shop.owner.supabaseId.startsWith("claim_code:") : false;
+
+        return {
+          logId: log.id,
+          createdAt: log.createdAt,
+          claimCode,
+          isClaimed,
+          shop: shop ? {
+            id: shop.id,
+            name: shop.name,
+            category: shop.category,
+            city: shop.city,
+            district: shop.district,
+            status: shop.status,
+            owner: {
+              name: shop.owner.name,
+              email: shop.owner.email,
+              phone: shop.owner.phone,
+            },
+          } : null,
+        };
+      });
+
+      return { success: true, data: items };
+    }
   );

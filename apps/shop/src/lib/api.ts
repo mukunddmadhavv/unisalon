@@ -106,4 +106,7 @@ export const api = {
     }
     return json.data.url;
   },
+
+  claimShop: (code: string) =>
+    request("/api/owner/claim-shop", { method: "POST", body: JSON.stringify({ code }) }),
 };

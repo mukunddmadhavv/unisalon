@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { prisma, type ServiceCategory } from "@unisalon/db";
 import { requireOwner } from "../middleware/auth";
 import { authPlugin } from "../middleware/auth";
-import { supabaseAdmin } from "../lib/supabase";
+import { supabaseAdmin, clerkClient } from "../lib/supabase";
 import slugify from "slugify";
 
 const auth = requireOwner();
@@ -79,15 +79,58 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
     }
   )
 
+  .post(
+    "/claim-shop",
+    async ({ body, auth: user, set }) => {
+      const code = body.code.trim().toUpperCase();
+      const claimCodeStr = `claim_code:${code}`;
+
+      const shopOwner = await prisma.shopOwner.findUnique({
+        where: { supabaseId: claimCodeStr },
+      });
+
+      if (!shopOwner) {
+        set.status = 400;
+        return { success: false, error: "Invalid or already claimed activation code" };
+      }
+
+      await prisma.shopOwner.update({
+        where: { id: shopOwner.id },
+        data: {
+          supabaseId: user.supabaseId,
+          email: user.email,
+        },
+      });
+
+      await clerkClient.users.updateUserMetadata(user.supabaseId, {
+        publicMetadata: { role: "OWNER", isOwner: true },
+      });
+
+      return { success: true, message: "Salon claimed successfully!" };
+    },
+    {
+      body: t.Object({
+        code: t.String({ minLength: 4 }),
+      }),
+    }
+  )
+
   .use(auth)
   // ─── Shop CRUD ─────────────────────────────────────────────────────
   .get(
     "/shop",
-    async ({ auth }) => {
-      const shop = await prisma.shop.findFirst({
-        where: { owner: { supabaseId: auth.supabaseId } },
-      });
+    async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const where = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
+
+      const shop = await prisma.shop.findFirst({ where });
       return { success: true, data: shop };
+    },
+    {
+      query: t.Object({ shopId: t.Optional(t.String()) }),
     }
   )
 
@@ -135,8 +178,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   .put(
     "/shops/:id",
     async ({ params, body, auth, set }) => {
+      const isUserAdmin = auth.role === "ADMIN";
       const shop = await prisma.shop.findFirst({
-        where: { id: params.id, owner: { supabaseId: auth.supabaseId } },
+        where: isUserAdmin
+          ? { id: params.id }
+          : { id: params.id, owner: { supabaseId: auth.supabaseId } },
       });
       if (!shop) { set.status = 404; return { success: false, error: "Shop not found" }; }
 
@@ -148,8 +194,18 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
     },
     {
       body: t.Partial(t.Object({
-        name: t.String(), description: t.String(),
-        openTime: t.String(), closeTime: t.String(),
+        name: t.String(),
+        description: t.String(),
+        category: t.Union([t.Literal("MALE"), t.Literal("FEMALE"), t.Literal("UNISEX")]),
+        address: t.String(),
+        city: t.String(),
+        district: t.String(),
+        state: t.String(),
+        pincode: t.String(),
+        latitude: t.Number(),
+        longitude: t.Number(),
+        openTime: t.String(),
+        closeTime: t.String(),
         workingDays: t.Array(t.String()),
       })),
     }
@@ -158,9 +214,15 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   // ─── Staff CRUD ────────────────────────────────────────────────────
   .get(
     "/staff",
-    async ({ auth }) => {
+    async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const whereShop = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
+
       const shop = await prisma.shop.findFirst({
-        where: { owner: { supabaseId: auth.supabaseId } },
+        where: whereShop,
         select: { id: true },
       });
       if (!shop) return { success: true, data: [] };
@@ -170,6 +232,9 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         orderBy: { displayOrder: "asc" },
       });
       return { success: true, data: staff };
+    },
+    {
+      query: t.Object({ shopId: t.Optional(t.String()) }),
     }
   )
 
@@ -177,8 +242,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
     "/staff",
     async ({ body, auth, set }) => {
       const { shopId, ...staffData } = body;
+      const isUserAdmin = auth.role === "ADMIN";
       const shop = await prisma.shop.findFirst({
-        where: { id: shopId, owner: { supabaseId: auth.supabaseId } },
+        where: isUserAdmin
+          ? { id: shopId }
+          : { id: shopId, owner: { supabaseId: auth.supabaseId } },
         select: { id: true },
       });
       if (!shop) { set.status = 403; return { success: false, error: "Unauthorized" }; }
@@ -203,8 +271,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   .put(
     "/staff/:id",
     async ({ params, body, auth, set }) => {
+      const isUserAdmin = auth.role === "ADMIN";
       const staff = await prisma.staffMember.findFirst({
-        where: { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
+        where: isUserAdmin
+          ? { id: params.id }
+          : { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
       });
       if (!staff) { set.status = 404; return { success: false, error: "Staff not found" }; }
 
@@ -224,8 +295,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   )
 
   .delete("/staff/:id", async ({ params, auth, set }) => {
+    const isUserAdmin = auth.role === "ADMIN";
     const staff = await prisma.staffMember.findFirst({
-      where: { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
+      where: isUserAdmin
+        ? { id: params.id }
+        : { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
     });
     if (!staff) { set.status = 404; return { success: false, error: "Staff not found" }; }
 
@@ -236,9 +310,15 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   // ─── Service CRUD ──────────────────────────────────────────────────
   .get(
     "/services",
-    async ({ auth }) => {
+    async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const whereShop = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
+
       const shop = await prisma.shop.findFirst({
-        where: { owner: { supabaseId: auth.supabaseId } },
+        where: whereShop,
         select: { id: true },
       });
       if (!shop) return { success: true, data: [] };
@@ -248,6 +328,9 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         orderBy: { displayOrder: "asc" },
       });
       return { success: true, data: services };
+    },
+    {
+      query: t.Object({ shopId: t.Optional(t.String()) }),
     }
   )
 
@@ -255,8 +338,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
     "/services",
     async ({ body, auth, set }) => {
       const { shopId, ...serviceData } = body;
+      const isUserAdmin = auth.role === "ADMIN";
       const shop = await prisma.shop.findFirst({
-        where: { id: shopId, owner: { supabaseId: auth.supabaseId } },
+        where: isUserAdmin
+          ? { id: shopId }
+          : { id: shopId, owner: { supabaseId: auth.supabaseId } },
         select: { id: true },
       });
       if (!shop) { set.status = 403; return { success: false, error: "Unauthorized" }; }
@@ -287,8 +373,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   .put(
     "/services/:id",
     async ({ params, body, auth, set }) => {
+      const isUserAdmin = auth.role === "ADMIN";
       const svc = await prisma.service.findFirst({
-        where: { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
+        where: isUserAdmin
+          ? { id: params.id }
+          : { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
       });
       if (!svc) { set.status = 404; return { success: false, error: "Service not found" }; }
 
@@ -315,8 +404,11 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   )
 
   .delete("/services/:id", async ({ params, auth, set }) => {
+    const isUserAdmin = auth.role === "ADMIN";
     const svc = await prisma.service.findFirst({
-      where: { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
+      where: isUserAdmin
+        ? { id: params.id }
+        : { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
     });
     if (!svc) { set.status = 404; return { success: false, error: "Service not found" }; }
 
@@ -328,8 +420,14 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   .get(
     "/bookings",
     async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const whereShop = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
+
       const shop = await prisma.shop.findFirst({
-        where: { owner: { supabaseId: auth.supabaseId } },
+        where: whereShop,
         select: { id: true },
       });
       if (!shop) return { success: true, data: [] };
@@ -349,14 +447,17 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
       });
       return { success: true, data: bookings };
     },
-    { query: t.Object({ date: t.Optional(t.String()), status: t.Optional(t.String()) }) }
+    { query: t.Object({ date: t.Optional(t.String()), status: t.Optional(t.String()), shopId: t.Optional(t.String()) }) }
   )
 
   .put(
     "/bookings/:id/status",
     async ({ params, body, auth, set }) => {
+      const isUserAdmin = auth.role === "ADMIN";
       const booking = await prisma.booking.findFirst({
-        where: { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
+        where: isUserAdmin
+          ? { id: params.id }
+          : { id: params.id, shop: { owner: { supabaseId: auth.supabaseId } } },
       });
       if (!booking) { set.status = 404; return { success: false, error: "Booking not found" }; }
 
@@ -370,31 +471,51 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
   )
 
   // ─── Notifications ─────────────────────────────────────────────────
-  .get("/notifications", async ({ auth }) => {
-    const shop = await prisma.shop.findFirst({
-      where: { owner: { supabaseId: auth.supabaseId } },
-      select: { id: true },
-    });
-    if (!shop) return { success: true, data: [] };
+  .get(
+    "/notifications",
+    async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const whereShop = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
 
-    const notifications = await prisma.shopNotification.findMany({
-      where: { shopId: shop.id },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
-    return { success: true, data: notifications };
-  })
+      const shop = await prisma.shop.findFirst({
+        where: whereShop,
+        select: { id: true },
+      });
+      if (!shop) return { success: true, data: [] };
 
-  .put("/notifications/read", async ({ auth }) => {
-    const shop = await prisma.shop.findFirst({
-      where: { owner: { supabaseId: auth.supabaseId } },
-      select: { id: true },
-    });
-    if (!shop) return { success: true, data: {} };
+      const notifications = await prisma.shopNotification.findMany({
+        where: { shopId: shop.id },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+      return { success: true, data: notifications };
+    },
+    { query: t.Object({ shopId: t.Optional(t.String()) }) }
+  )
 
-    await prisma.shopNotification.updateMany({
-      where: { shopId: shop.id, isRead: false },
-      data: { isRead: true },
-    });
-    return { success: true, data: { marked: true } };
-  });
+  .put(
+    "/notifications/read",
+    async ({ auth, query }) => {
+      const isUserAdmin = auth.role === "ADMIN";
+      const targetShopId = query.shopId;
+      const whereShop = (isUserAdmin && targetShopId)
+        ? { id: targetShopId }
+        : { owner: { supabaseId: auth.supabaseId } };
+
+      const shop = await prisma.shop.findFirst({
+        where: whereShop,
+        select: { id: true },
+      });
+      if (!shop) return { success: true, data: {} };
+
+      await prisma.shopNotification.updateMany({
+        where: { shopId: shop.id, isRead: false },
+        data: { isRead: true },
+      });
+      return { success: true, data: { marked: true } };
+    },
+    { query: t.Object({ shopId: t.Optional(t.String()) }) }
+  );

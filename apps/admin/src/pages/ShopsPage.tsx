@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../components/AdminLayout";
 import { api } from "../lib/api";
-import { Search, Filter, ChevronLeft, ChevronRight, Store, Mail, Phone, Calendar } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Store, Mail, Phone, Calendar, Plus, X, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
+import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
+import toast from "react-hot-toast";
 
 interface Shop {
   id: string;
@@ -26,33 +29,48 @@ interface Shop {
   };
 }
 
-const STATUSES = ["ALL", "PENDING", "APPROVED", "REJECTED", "SUSPENDED"];
 const CATEGORIES = ["ALL", "MALE", "FEMALE", "UNISEX"];
 
 export default function ShopsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("ALL");
   const [category, setCategory] = useState("ALL");
   const [page, setPage] = useState(1);
 
+  // Onboard modal state
+  const [showOnboardModal, setShowOnboardModal] = useState(false);
+  const [onboardSuccess, setOnboardSuccess] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [onboardState, setOnboardState] = useState("");
+
+  const formDistricts = STATES_AND_DISTRICTS[onboardState] ?? [];
+
   const { data: response, isLoading } = useQuery<{ shops: Shop[]; total: number; page: number }>({
-    queryKey: ["admin-shops", search, status, category, page],
+    queryKey: ["admin-shops", search, category, page],
     queryFn: () =>
       api.getShops({
         search: search.trim() || undefined,
-        status: status !== "ALL" ? status : undefined,
+        status: "APPROVED",
         category: category !== "ALL" ? category : undefined,
         page: String(page),
       }),
   });
 
+  const onboardMutation = useMutation({
+    mutationFn: (data: any) => api.onboardShop(data),
+    onSuccess: (res) => {
+      setGeneratedCode(res.claimCode);
+      setOnboardSuccess(true);
+      queryClient.invalidateQueries({ queryKey: ["admin-shops"] });
+      toast.success("Salon onboarded successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to onboard salon");
+    },
+  });
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setPage(1);
-  };
-
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatus(e.target.value);
     setPage(1);
   };
 
@@ -61,29 +79,56 @@ export default function ShopsPage() {
     setPage(1);
   };
 
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setOnboardState(e.target.value);
+  };
+
+  const handleOnboardSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      ownerName: formData.get("ownerName") as string,
+      ownerEmail: (formData.get("ownerEmail") as string) || undefined,
+      ownerPhone: formData.get("ownerPhone") as string,
+      salonName: formData.get("salonName") as string,
+      category: formData.get("salonCategory") as string,
+      address: formData.get("address") as string,
+      city: formData.get("city") as string,
+      district: formData.get("district") as string,
+      state: formData.get("state") as string,
+      pincode: formData.get("pincode") as string,
+    };
+    onboardMutation.mutate(data);
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generatedCode);
+    toast.success("Activation code copied!");
+  };
+
   const shops = response?.shops ?? [];
   const total = response?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / 20));
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, string> = {
-      PENDING: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-      APPROVED: "bg-green-500/10 text-green-400 border-green-500/20",
-      REJECTED: "bg-red-500/10 text-red-400 border-red-500/20",
-      SUSPENDED: "bg-gray-500/10 text-gray-400 border-gray-500/20",
-    };
-    return (
-      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${badges[status] ?? badges.PENDING}`}>
-        {status}
-      </span>
-    );
-  };
+
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Partner Salons"
-        subtitle="Manage and filter through all salon listings registered on the UniSalon platform."
+        title="Active Salons"
+        subtitle="Browse through all salon listings currently live and available to customers on the UniSalon platform."
+        actions={
+          <button
+            onClick={() => {
+              setOnboardSuccess(false);
+              setOnboardState("");
+              setShowOnboardModal(true);
+            }}
+            className="bg-brand-500 hover:bg-brand-600 text-white text-xs px-4 py-2.5 rounded-lg font-bold shadow-sm transition-all flex items-center gap-1.5"
+          >
+            <Plus size={14} /> Onboard Salon
+          </button>
+        }
       />
 
       {/* Filters Panel */}
@@ -97,18 +142,6 @@ export default function ShopsPage() {
             value={search}
             onChange={handleSearchChange}
           />
-        </div>
-
-        {/* Status Filter */}
-        <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
-          <Filter size={14} className="text-gray-500" />
-          <select className="input py-2 text-sm w-full md:w-36" value={status} onChange={handleStatusChange}>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s === "ALL" ? "All Statuses" : s}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Category Filter */}
@@ -133,8 +166,8 @@ export default function ShopsPage() {
         ) : shops.length === 0 ? (
           <div className="p-16 text-center text-gray-500">
             <Store size={36} className="mx-auto mb-3 text-gray-600" />
-            <p className="font-medium text-white">No shops found</p>
-            <p className="text-sm mt-1">Try modifying your search query or status filter parameters.</p>
+            <p className="font-medium text-white">No active shops found</p>
+            <p className="text-sm mt-1">Try modifying your search query or category filter parameters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -146,7 +179,8 @@ export default function ShopsPage() {
                   <th className="p-4">Stats</th>
                   <th className="p-4">Location</th>
                   <th className="p-4">Registered Date</th>
-                  <th className="p-4 pr-6 text-right">Status</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
@@ -191,8 +225,20 @@ export default function ShopsPage() {
                     </td>
 
                     {/* Status Badge */}
+                    <td className="p-4">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-500/10 text-green-400 border-green-500/20">
+                        LIVE ON WEB
+                      </span>
+                    </td>
+
+                    {/* Actions */}
                     <td className="p-4 pr-6 text-right">
-                      {getStatusBadge(shop.status)}
+                      <Link
+                        to={`/shops/${shop.id}/manage`}
+                        className="bg-brand-500 hover:bg-brand-600 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold shadow-sm transition-all"
+                      >
+                        Set Shop
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -232,6 +278,155 @@ export default function ShopsPage() {
           </div>
         )}
       </div>
+
+      {/* Onboard Salon Modal */}
+      {showOnboardModal && (
+        <div className="fixed inset-0 bg-black/75 z-[100] backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-surface-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-surface-border">
+              <h2 className="font-bold text-lg text-white">Onboard Partner Salon</h2>
+              <button
+                onClick={() => setShowOnboardModal(false)}
+                className="p-1.5 hover:bg-surface/30 rounded-lg text-gray-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {onboardSuccess ? (
+              <div className="p-6 space-y-6 text-center">
+                <div className="w-12 h-12 bg-green-500/10 text-green-400 border border-green-500/25 rounded-full flex items-center justify-center mx-auto">
+                  <Check size={24} />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-bold text-white text-base">Salon Onboarded Successfully!</h3>
+                  <p className="text-gray-400 text-xs px-6">
+                    The salon is created in our database. Give this invitation activation code to the owner so they can claim their dashboard.
+                  </p>
+                </div>
+
+                <div className="bg-surface-container/60 border border-surface-border rounded-lg p-4 flex items-center justify-between gap-4 max-w-sm mx-auto">
+                  <div className="text-left">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Invitation Code</span>
+                    <span className="font-headline font-black text-xl text-white tracking-widest">{generatedCode}</span>
+                  </div>
+                  <button
+                    onClick={handleCopyCode}
+                    className="p-2 border border-surface-border hover:bg-surface/30 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+
+                <div className="pt-4 border-t border-surface-border flex justify-end">
+                  <button
+                    onClick={() => setShowOnboardModal(false)}
+                    className="bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm transition-all"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleOnboardSubmit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pb-1">Owner Contact</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Name</label>
+                      <input name="ownerName" className="input py-2 text-xs w-full" required placeholder="e.g. Anil Sharma" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Phone</label>
+                      <input name="ownerPhone" className="input py-2 text-xs w-full" required placeholder="10-digit number" pattern="[0-9]{10}" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Owner Email (Optional)</label>
+                      <input name="ownerEmail" type="email" className="input py-2 text-xs w-full" placeholder="e.g. sharma.salon@gmail.com" />
+                    </div>
+                  </div>
+
+                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Profile</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Salon Name</label>
+                      <input name="salonName" className="input py-2 text-xs w-full" required placeholder="e.g. Royal Hair Cut" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Category</label>
+                      <select name="salonCategory" className="input py-2 text-xs w-full">
+                        <option value="UNISEX">UNISEX</option>
+                        <option value="MALE">MALE</option>
+                        <option value="FEMALE">FEMALE</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <h3 className="font-bold text-xs text-brand-400 uppercase tracking-widest border-b border-surface-border pt-2 pb-1">Salon Address</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">State</label>
+                      <select
+                        name="state"
+                        value={onboardState}
+                        onChange={handleStateChange}
+                        className="input py-2 text-xs w-full"
+                        required
+                      >
+                        <option value="">Select State</option>
+                        {STATES.map((st) => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">District</label>
+                      <select
+                        name="district"
+                        className="input py-2 text-xs w-full"
+                        required
+                      >
+                        <option value="">Select District</option>
+                        {formDistricts.map((dst) => <option key={dst} value={dst}>{dst}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">City</label>
+                      <input name="city" className="input py-2 text-xs w-full" required placeholder="e.g. Deoria" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pincode</label>
+                      <input name="pincode" className="input py-2 text-xs w-full" required placeholder="6-digit pincode" pattern="[0-9]{6}" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Full Street Address</label>
+                      <input name="address" className="input py-2 text-xs w-full" required placeholder="Building, Street, Landmark" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6 border-t border-surface-border mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowOnboardModal(false)}
+                    className="bg-transparent text-gray-400 border border-surface-border text-xs px-4 py-2 rounded-lg hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={onboardMutation.isPending}
+                    className="bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm transition-all"
+                  >
+                    {onboardMutation.isPending ? "Onboarding..." : "Generate Activation Code"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

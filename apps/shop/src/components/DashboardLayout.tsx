@@ -1,8 +1,12 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { useState } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { NotificationBell } from "./NotificationBell";
-import { useUser } from "@clerk/react";
+import { useUser, useClerk } from "@clerk/react";
 import { useNotifications } from "../hooks/useNotifications";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../lib/api";
+import toast from "react-hot-toast";
 
 interface DashboardLayoutProps {
   title: string;
@@ -38,7 +42,106 @@ export function PageHeader({ title, subtitle, actions }: DashboardLayoutProps) {
 
 export function DashboardLayout() {
   const { user } = useUser();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+  const [claimCode, setClaimCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const { data: shopResponse, isLoading, refetch } = useQuery<any>({
+    queryKey: ["owner-shop"],
+    queryFn: () => api.getShop(),
+  });
+
   const { unreadCount } = useNotifications();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const shop = shopResponse?.data ?? shopResponse;
+
+  if (!shop) {
+    const handleClaimSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!claimCode.trim()) return;
+      setSubmitting(true);
+      try {
+        await api.claimShop(claimCode);
+        toast.success("Salon claimed successfully! Setting up your dashboard...");
+        await refetch();
+      } catch (err: any) {
+        toast.error(err.message || "Failed to claim salon. Please check the code.");
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
+        <div className="w-full max-w-md bg-white border border-border-light rounded-2xl shadow-xl p-8 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <span className="material-symbols-outlined text-3xl">storefront</span>
+            </div>
+            <h1 className="font-display text-2xl font-black text-text-primary tracking-tight">Activate Partner Salon</h1>
+            <p className="text-xs text-text-secondary px-2">
+              Claim a visited salon account using your invitation code, or set up a brand new profile from scratch.
+            </p>
+          </div>
+
+          <form onSubmit={handleClaimSubmit} className="space-y-4">
+            <div>
+              <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block mb-1">
+                Invitation Activation Code
+              </label>
+              <input
+                value={claimCode}
+                onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
+                placeholder="e.g. US-XXXXXX"
+                className="w-full px-4 py-2.5 bg-surface-container border border-border-light rounded-xl font-headline font-bold text-center tracking-widest text-text-primary focus:outline-none focus:border-primary transition-colors placeholder:text-text-secondary placeholder:tracking-normal placeholder:font-sans placeholder:font-normal"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-3 bg-primary text-white rounded-xl font-label-lg font-bold text-sm hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50"
+            >
+              {submitting ? "Activating..." : "Activate Account"}
+            </button>
+          </form>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-border-light"></div>
+            <span className="flex-shrink mx-4 text-[10px] text-text-secondary font-bold uppercase tracking-wider">OR</span>
+            <div className="flex-grow border-t border-border-light"></div>
+          </div>
+
+          <button
+            onClick={() => navigate("/register")}
+            className="w-full py-3 border border-border-light text-text-primary rounded-xl font-label-lg font-bold text-sm hover:bg-surface transition-colors"
+          >
+            Register New Salon Profile
+          </button>
+
+          <div className="text-center pt-2">
+            <button
+              onClick={() => signOut().then(() => navigate("/auth/login"))}
+              className="text-xs text-text-secondary hover:text-error hover:underline transition-colors flex items-center gap-1.5 mx-auto font-semibold"
+            >
+              <span className="material-symbols-outlined text-sm">logout</span>
+              Sign out from account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background text-on-surface">
