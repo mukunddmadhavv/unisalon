@@ -34,6 +34,7 @@ const CATEGORIES = ["ALL", "MALE", "FEMALE", "UNISEX"];
 export default function ShopsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("APPROVED");
   const [category, setCategory] = useState("ALL");
   const [page, setPage] = useState(1);
 
@@ -46,14 +47,41 @@ export default function ShopsPage() {
   const formDistricts = STATES_AND_DISTRICTS[onboardState] ?? [];
 
   const { data: response, isLoading } = useQuery<{ shops: Shop[]; total: number; page: number }>({
-    queryKey: ["admin-shops", search, category, page],
+    queryKey: ["admin-shops", search, status, category, page],
     queryFn: () =>
       api.getShops({
         search: search.trim() || undefined,
-        status: "APPROVED",
+        status: status !== "ALL" ? status : undefined,
         category: category !== "ALL" ? category : undefined,
         page: String(page),
       }),
+  });
+
+  const suspendMutation = useMutation({
+    mutationFn: (id: string) => api.suspendShop(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-shops"] });
+      toast.success("Shop suspended/paused successfully.");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to suspend shop"),
+  });
+
+  const resumeMutation = useMutation({
+    mutationFn: (id: string) => api.approveShop(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-shops"] });
+      toast.success("Shop activated/resumed successfully.");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to resume shop"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deleteShop(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-shops"] });
+      toast.success("Shop deleted permanently.");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to delete shop"),
   });
 
   const onboardMutation = useMutation({
@@ -144,6 +172,18 @@ export default function ShopsPage() {
           />
         </div>
 
+        {/* Status Filter */}
+        <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+          <Filter size={14} className="text-gray-500" />
+          <select className="input py-2 text-sm w-full md:w-40" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+            <option value="APPROVED">Live on Web</option>
+            <option value="PENDING">Pending Approval</option>
+            <option value="SUSPENDED">Paused</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="ALL">All Registered</option>
+          </select>
+        </div>
+
         {/* Category Filter */}
         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
           <Filter size={14} className="text-gray-500" />
@@ -167,7 +207,7 @@ export default function ShopsPage() {
           <div className="p-16 text-center text-gray-500">
             <Store size={36} className="mx-auto mb-3 text-gray-600" />
             <p className="font-medium text-white">No active shops found</p>
-            <p className="text-sm mt-1">Try modifying your search query or category filter parameters.</p>
+            <p className="text-sm mt-1">Try modifying your search query or status filter parameters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -226,19 +266,76 @@ export default function ShopsPage() {
 
                     {/* Status Badge */}
                     <td className="p-4">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-500/10 text-green-400 border-green-500/20">
-                        LIVE ON WEB
-                      </span>
+                      {shop.status === "APPROVED" && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-500/10 text-green-400 border-green-500/20">
+                          LIVE ON WEB
+                        </span>
+                      )}
+                      {shop.status === "SUSPENDED" && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                          PAUSED
+                        </span>
+                      )}
+                      {shop.status === "PENDING" && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-orange-500/10 text-orange-400 border-orange-500/20">
+                          PENDING
+                        </span>
+                      )}
+                      {shop.status === "REJECTED" && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-500/10 text-red-400 border-red-500/20">
+                          REJECTED
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td className="p-4 pr-6 text-right">
-                      <Link
-                        to={`/shops/${shop.id}/manage`}
-                        className="bg-brand-500 hover:bg-brand-600 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold shadow-sm transition-all"
-                      >
-                        Set Shop
-                      </Link>
+                      <div className="flex items-center justify-end gap-2.5">
+                        <Link
+                          to={`/shops/${shop.id}/manage`}
+                          className="bg-brand-500 hover:bg-brand-600 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold shadow-sm transition-all"
+                        >
+                          Modify
+                        </Link>
+
+                        {shop.status === "APPROVED" && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to pause/suspend "${shop.name}"? It will no longer show up on the web portal.`)) {
+                                suspendMutation.mutate(shop.id);
+                              }
+                            }}
+                            disabled={suspendMutation.isPending}
+                            className="bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-yellow-500/20 transition-all disabled:opacity-50"
+                          >
+                            Pause
+                          </button>
+                        )}
+
+                        {shop.status === "SUSPENDED" && (
+                          <button
+                            onClick={() => {
+                              resumeMutation.mutate(shop.id);
+                            }}
+                            disabled={resumeMutation.isPending}
+                            className="bg-green-600/20 hover:bg-green-600/30 text-green-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-green-500/20 transition-all disabled:opacity-50"
+                          >
+                            Resume
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            if (confirm(`⚠️ WARNING: Are you sure you want to permanently delete "${shop.name}"? All services, staff, logs, and bookings will be deleted forever.`)) {
+                              deleteMutation.mutate(shop.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                          className="bg-red-600/15 hover:bg-red-600/30 text-red-400 text-xs px-2.5 py-1.5 rounded-lg font-bold border border-red-500/20 transition-all disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -140,6 +140,48 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
     { body: t.Object({ reason: t.String() }) }
   )
 
+  // ── Suspend shop ───────────────────────────────────────────────────
+  .put(
+    "/shops/:id/suspend",
+    async ({ params, auth }) => {
+      const shop = await prisma.shop.update({
+        where: { id: params.id },
+        data: { status: "SUSPENDED" },
+      });
+
+      await prisma.adminLog.create({
+        data: {
+          adminId: auth.supabaseId,
+          action: "SUSPEND_SHOP",
+          targetType: "SHOP",
+          targetId: params.id,
+          shopId: params.id,
+        },
+      });
+
+      return { success: true, data: shop };
+    }
+  )
+
+  // ── Delete shop (Clean Cascade) ────────────────────────────────────
+  .delete(
+    "/shops/:id",
+    async ({ params }) => {
+      await prisma.$transaction([
+        prisma.booking.deleteMany({ where: { shopId: params.id } }),
+        prisma.service.deleteMany({ where: { shopId: params.id } }),
+        prisma.staffMember.deleteMany({ where: { shopId: params.id } }),
+        prisma.shopNotification.deleteMany({ where: { shopId: params.id } }),
+        prisma.adminLog.deleteMany({ where: { shopId: params.id } }),
+        prisma.review.deleteMany({ where: { shopId: params.id } }),
+        prisma.slotHold.deleteMany({ where: { shopId: params.id } }),
+        prisma.shop.delete({ where: { id: params.id } }),
+      ]);
+
+      return { success: true, message: "Shop deleted successfully" };
+    }
+  )
+
   // ── All users ──────────────────────────────────────────────────────
   .get(
     "/users",

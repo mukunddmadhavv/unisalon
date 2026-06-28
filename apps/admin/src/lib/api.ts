@@ -53,6 +53,8 @@ export const api = {
   },
   approveShop: (id: string) => request<any>(`/api/admin/shops/${id}/approve`, { method: "PUT" }),
   rejectShop: (id: string, reason: string) => request<any>(`/api/admin/shops/${id}/reject`, { method: "PUT", body: JSON.stringify({ reason }) }),
+  suspendShop: (id: string) => request<any>(`/api/admin/shops/${id}/suspend`, { method: "PUT" }),
+  deleteShop: (id: string) => request<any>(`/api/admin/shops/${id}`, { method: "DELETE" }),
 
   // ── Admin: Users Directory ─────────────────────────────────────────
   getUsers: (params?: { search?: string; page?: string }) => {
