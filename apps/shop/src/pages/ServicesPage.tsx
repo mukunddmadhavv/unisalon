@@ -18,6 +18,7 @@ interface Service {
   name: string;
   description?: string;
   category: string;
+  customCategoryName?: string;
   price: number;
   durationMins: number;
   isActive: boolean;
@@ -29,6 +30,7 @@ interface ServiceFormData {
   name: string;
   description: string;
   category: string;
+  customCategoryName: string;
   price: string;
   durationMins: string;
   imageUrl?: string;
@@ -47,6 +49,7 @@ function ServiceModal({ shopId, service, onClose }: ServiceModalProps) {
     name: service?.name ?? "",
     description: service?.description ?? "",
     category: service?.category ?? "HAIRCUT",
+    customCategoryName: service?.customCategoryName ?? "",
     price: service ? String(service.price / 100) : "",
     durationMins: service ? String(service.durationMins) : "45",
     imageUrl: service?.imageUrl ?? "",
@@ -61,6 +64,7 @@ function ServiceModal({ shopId, service, onClose }: ServiceModalProps) {
         name: data.name,
         description: data.description,
         category: data.category,
+        customCategoryName: data.category === "OTHER" ? data.customCategoryName : undefined,
         price: Math.round(Number(data.price) * 100),
         durationMins: Number(data.durationMins),
         imageUrl: data.imageUrl || undefined,
@@ -157,7 +161,7 @@ function ServiceModal({ shopId, service, onClose }: ServiceModalProps) {
             <select
               className="input bg-white"
               value={form.category}
-              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, customCategoryName: e.target.value !== "OTHER" ? "" : f.customCategoryName }))}
             >
               {CATEGORIES.map((c) => (
                 <option key={c.name} value={c.name}>{c.label}</option>
@@ -165,6 +169,18 @@ function ServiceModal({ shopId, service, onClose }: ServiceModalProps) {
               <option value="OTHER">Other</option>
             </select>
           </div>
+          {form.category === "OTHER" && (
+            <div>
+              <label className="label">Custom Category Name *</label>
+              <input
+                className="input"
+                placeholder="e.g. Keratin Treatment"
+                value={form.customCategoryName}
+                onChange={(e) => setForm((f) => ({ ...f, customCategoryName: e.target.value }))}
+                required
+              />
+            </div>
+          )}
           <div>
             <label className="label">Description</label>
             <textarea
@@ -370,7 +386,7 @@ export default function ServicesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary bg-background border border-border-light px-2.5 py-0.5 rounded-full">
-                    {s.category.replace("_", " ")}
+                    {s.category === "OTHER" && s.customCategoryName ? s.customCategoryName : s.category.replace("_", " ")}
                   </span>
                   <div className="flex gap-2">
                     <button

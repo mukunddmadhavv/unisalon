@@ -364,6 +364,7 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         name: t.String(),
         description: t.Optional(t.String()),
         category: t.String(),
+        customCategoryName: t.Optional(t.String()),
         price: t.Number(),
         durationMins: t.Number(),
         imageUrl: t.Optional(t.String()),
@@ -400,6 +401,7 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         isActive: t.Boolean(),
         description: t.String(),
         category: t.String(),
+        customCategoryName: t.String(),
         imageUrl: t.String(),
       })),
     }

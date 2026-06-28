@@ -202,6 +202,7 @@ model Service {
   name         String
   description  String?
   category     ServiceCategory
+  customCategoryName String?       // NEW FIELD for custom category
   price        Int             // in paise (₹100 = 10000 paise)
   durationMins Int             // CRITICAL: drives slot blocking computation
   imageUrl     String?

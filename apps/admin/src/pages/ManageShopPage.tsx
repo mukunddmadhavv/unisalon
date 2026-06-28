@@ -30,6 +30,7 @@ interface Service {
   name: string;
   description?: string;
   category: string;
+  customCategoryName?: string;
   price: number;
   durationMins: number;
   isActive: boolean;
@@ -197,6 +198,7 @@ export default function ManageShopPage() {
       name: formData.get("svcName") as string,
       description: formData.get("svcDescription") as string,
       category: formData.get("svcCategory") as string,
+      customCategoryName: formData.get("svcCategory") === "OTHER" ? (formData.get("svcCustomCategory") as string) : undefined,
       price: Math.round(Number(formData.get("svcPrice")) * 100), // convert Rs to paise
       durationMins: Number(formData.get("svcDuration")),
       isActive: true,
@@ -212,6 +214,7 @@ export default function ManageShopPage() {
       name: formData.get("svcName") as string,
       description: formData.get("svcDescription") as string,
       category: formData.get("svcCategory") as string,
+      customCategoryName: formData.get("svcCategory") === "OTHER" ? (formData.get("svcCustomCategory") as string) : undefined,
       price: Math.round(Number(formData.get("svcPrice")) * 100),
       durationMins: Number(formData.get("svcDuration")),
       isActive: formData.get("svcActive") === "true",
@@ -613,6 +616,10 @@ export default function ManageShopPage() {
                   </select>
                 </div>
                 <div>
+                  <label className="text-xs font-semibold text-gray-400 block mb-1">Custom Category Name (If Other)</label>
+                  <input name="svcCustomCategory" defaultValue={editingService?.customCategoryName ?? ""} className="input w-full py-1.5 text-xs" placeholder="e.g. Laser Treatment" />
+                </div>
+                <div>
                   <label className="text-xs font-semibold text-gray-400 block mb-1">Price (in ₹)</label>
                   <input name="svcPrice" type="number" step="0.01" defaultValue={editingService ? (editingService.price / 100).toFixed(2) : ""} className="input w-full py-1.5 text-xs" required placeholder="e.g. 150" />
                 </div>
@@ -681,7 +688,7 @@ export default function ManageShopPage() {
                           <div className="font-semibold text-white">{svc.name}</div>
                           {svc.description && <div className="text-xs text-gray-500 mt-0.5">{svc.description}</div>}
                         </td>
-                        <td className="p-3 text-xs">{svc.category.replace("_", " ")}</td>
+                        <td className="p-3 text-xs">{svc.category === "OTHER" && svc.customCategoryName ? svc.customCategoryName : svc.category.replace("_", " ")}</td>
                         <td className="p-3 font-semibold text-white">₹{(svc.price / 100).toFixed(2)}</td>
                         <td className="p-3 text-xs">{svc.durationMins} mins</td>
                         <td className="p-3">

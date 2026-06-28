@@ -12,7 +12,17 @@ interface Service {
   durationMins: number;
   category: string;
   description?: string;
+  imageUrl?: string;
 }
+
+const CATEGORY_IMAGES: Record<string, string> = {
+  "HAIRCUT": "https://lh3.googleusercontent.com/aida-public/AB6AXuADdqfLqM8icwCE9lXw3Lgfwj1QJXs5-rObeibSYNqz3So2cIzuG09Y72SxI7AX5-_-XJA5CiOAobUwyGsKdNQIUsrVFm8a6FKbsIyDYubt4xO6HicpxMeoR4jgDqWc6jZgPrS7c0nS_AbbGSCpYGl9DjoIOGoRcv5yW7YydEcTD4tucLAtgyyHs6gJQd2RKBM2Xr2viC8tBRazuSrhlpHZ6BKFlaU8451cxTv_YrM5w9yhoCAPQeqWHpb3nKqfIovLaJeBdrBOxMz4",
+  "HAIR_COLOR": "https://lh3.googleusercontent.com/aida-public/AB6AXuCveYVz4YvvcOJlpeZg_KvkDgeerGYEE-rN4CZrckaI5Tb76uGNilec_Ylv1IG_IvP76eyh9Ic_lBqOn6_f_M9mu9eGy8xkqK0zGD6nRU6izOqcKLAQ2-uc6qbmM0iuJqAibJU5puTzHzyx1tHs9ZO5XHOzJuhK2CalxaSDsmpm8TmSNo7MkDSDep8GmY5oBFxZDsfk-oLzOiv4gjfd-nLk6fXOtPQpl_-anYxgXAsJnu5QsmKJxG0kJScMdmwLR70TP1KD7T6B0us3",
+  "MASSAGE": "https://lh3.googleusercontent.com/aida-public/AB6AXuDN1Wt0lGXd806SkG8Fj_2JRI9G_b2F7b2nX60mLw6o9As0lOYWdI9siDjCOXahBnAAATbbd_kGdmanEeOwIMXJ5ZKi7EbmwoVT6AIn2sBz7FiRSaqKCbsf6i88ZkfO8DtX8jXUiHIUJ323Mw6ZXip_1RxPKdM3Dq78Dv2g76_439f5xbzL8JEj1tf3_PYVYOAc9OdqmJnIaxZpiI8G92yU8heHaSjL3D8mF3m-Izpeap6f_pq_AdBVwn-hhIzeV1P5EVqR3PSBRctU",
+  "FACIAL": "https://lh3.googleusercontent.com/aida-public/AB6AXuBjZugcVretu-rl9yNta6uLgiF5BDGrfXDGIIye952pF3Pko_J4dBBWny5aosls6TDlw5yg6c653-F7jeo6QvkIsyb1tHVLOkG2rDtVtRMd7EcRfnbdH-QKq0r4RY9Mu8OAtYIA8zFqvBIS9mwW_tvcb6u1Ef8HP2EIre4ry7kzoVZKtMnonrCkNtCz6yHECyYAOODqo0gBx3cLYwxusROAzcEOjFZIW2SQfTxvoEOzQaFXA61LGeeAx7Y0jbxEVf17-jUNBPHhDxun",
+  "BEARD": "https://lh3.googleusercontent.com/aida-public/AB6AXuBMA6P4b5OkcBylTvcyVk2gDYh17iDrBU2b4DYA4QE0A8kz8Clj1ANmSlAtBMQVOlCgn1ZUEg5i57ta4y2nbQBwN07Oh9jgItdhJINcIv-mX3X3kVEcE3SSe_6UtvM3RU_BOV0pF9Ae2LSN9YUVH6aG717FsoClRoJHSHDa2Zi-_RRH6Q31QNWRwQdtgYaM1b3-_HiRO6dh7tIeDlh9C3djV8sDeSUsVzlPOp9H4KbjWdAxAjWK5vBad1pGBgzlG-pmnW3wXsgznhGo",
+  "DEFAULT": "https://lh3.googleusercontent.com/aida-public/AB6AXuCgFHRy78LcO4So8cu4g0Gfcvk-Vk9vRBtwKCo_iRKIlzKqrdhnRWyF2aI1du-I2OWPvRl9BPjcYOBefYbBceBH9DYHU-oYz58A8FAvFW1gLFYzYJsDaOPJomH9P1ACxzyzPjaimnax2ZEOkx869HyF8qOAr8pNskCDI16XF86Sc8dlMM-N-zd2D5LD-sgM-AmPn5cy90Ng0-xooC6x3WQClYPiVvCa6njnQLNKXJgdtHQ0KicwirXyMnU4w9D37Ts54_PxQMjgvoBI"
+};
 
 interface StaffMember {
   id: string;
@@ -370,7 +380,7 @@ export default function ShopDetailPage() {
                         <img
                           className="w-full h-full object-cover rounded-xl border border-gray-100"
                           alt={svc.name}
-                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgFHRy78LcO4So8cu4g0Gfcvk-Vk9vRBtwKCo_iRKIlzKqrdhnRWyF2aI1du-I2OWPvRl9BPjcYOBefYbBceBH9DYHU-oYz58A8FAvFW1gLFYzYJsDaOPJomH9P1ACxzyzPjaimnax2ZEOkx869HyF8qOAr8pNskCDI16XF86Sc8dlMM-N-zd2D5LD-sgM-AmPn5cy90Ng0-xooC6x3WQClYPiVvCa6njnQLNKXJgdtHQ0KicwirXyMnU4w9D37Ts54_PxQMjgvoBI"
+                          src={svc.imageUrl || CATEGORY_IMAGES[svc.category] || CATEGORY_IMAGES.DEFAULT}
                         />
                         <button
                           onClick={() => toggleService(svc.id)}
