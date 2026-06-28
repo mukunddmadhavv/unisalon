@@ -30,6 +30,11 @@ const CATEGORIES = [
   { name: "FACIAL",     label: "Facial",    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuADG8SfsuTWlSaMouxIKPlnumt97sNaAEPX43owmdMhaT8dZiee3ycfENOPqNbWfbKIxIyEtex7OBRjsKl07BFVUISaIWCsNdzl_7M46lpCBIw-AIP9gTdSUjgo4R8wOiP5ylYpQa8BGg5wwHPEKrXzQvqhCQlmyJp0n3O7w8613zbxZBUC2lFZL5pGo1pB1F69gBykuQP0wC35u08dYPUlOS2JzxOTdTSfehmAjTXStcULPoCfSdIUnuPUJ-mOfXBEkrBfJ2G0Lis7" },
   { name: "MASSAGE",    label: "Spa",       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDs7e8RY46DHRkwSUEdG1fseqcHkUcsWPg3r4osWmbh_Jg0aBx9ehDg6Wfv7yahOVk43PSzKhLCxZWD7G2VW680vphHvPg0DEBSh47zzK1B3oogmL7WUnM552amclJdtKQ-BKaMYdhQIl4z5GiwLKlzn97KNpGKGku0X586RzhXBCttY3_DlvQE2rc2sOyabKf2AgFNDyVnA6vW7Jhxo1dK3DwrTsvPRlQXfOvBvT7gChSjBi1_N4E27iHp_eUM1ke2V3-4CE7K7dLw" },
   { name: "HAIR_COLOR", label: "Color",     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAS7_WSLSiJaYZocAfer-ZTXwtoH5T-lQaRJc6t816B_ZIeUodfdXPINzKYTGyOvGL4l59OkBfgJxiA5I0bLCQowBTsATNt2rLCHTWopI4iJ70ckeMq_HLCKdrcU_2Rr94wV5h7vwGoQDxPDM6caoZSdgYJXyCMORwF69oheML6k058NoOJd4jVaj7XFm1AXK2GE4PBYBPBM7qcsQLGCmTL4V-1A1d4B9HOy4s5xI3SQbtls6ul2Inv3aPSNZJt_mGSE1Oh3cKwjGY_" },
+  { name: "HAIR_SPA",   label: "Hair Spa",  image: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/hair_spa-1782629496932.jpg" },
+  { name: "WAXING",     label: "Waxing",    image: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/waxing-1782629497239.jpg" },
+  { name: "KERATIN",    label: "Keratin",   image: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/keratin-1782629497758.jpg" },
+  { name: "STRAIGHTENING", label: "Straightening", image: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/straightening-1782629498084.jpg" },
+  { name: "OTHER",      label: "Other",     image: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/other-1782629498782.jpg" },
 ];
 
 const SEARCH_PLACEHOLDERS = [

@@ -9,6 +9,19 @@ const auth = requireOwner();
 // A lighter guard that just needs a valid Supabase token (any role)
 const anyAuth = authPlugin("CUSTOMER", "OWNER", "ADMIN");
 
+const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
+  HAIRCUT: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/haircut-1782629494727.jpg",
+  BEARD: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/beard-1782629495606.jpg",
+  FACIAL: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/facial-1782629495903.jpg",
+  MASSAGE: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/massage-1782629496181.jpg",
+  HAIR_COLOR: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/hair_color-1782629496470.jpg",
+  HAIR_SPA: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/hair_spa-1782629496932.jpg",
+  WAXING: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/waxing-1782629497239.jpg",
+  KERATIN: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/keratin-1782629497758.jpg",
+  STRAIGHTENING: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/straightening-1782629498084.jpg",
+  OTHER: "https://lvwifbyhtmrhilrjxcdk.supabase.co/storage/v1/object/public/service-images/other-1782629498782.jpg"
+};
+
 export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
 
   // ─── Register: create ShopOwner row after Supabase signup ─────────
@@ -349,11 +362,14 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
       });
       if (!shop) { set.status = 403; return { success: false, error: "Unauthorized" }; }
 
+      const finalImageUrl = serviceData.imageUrl || DEFAULT_CATEGORY_IMAGES[serviceData.category] || null;
+
       const service = await prisma.service.create({
         data: {
           shopId,
           ...serviceData,
           category: serviceData.category as ServiceCategory,
+          imageUrl: finalImageUrl,
         },
       });
       return { success: true, data: service };
