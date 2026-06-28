@@ -22,6 +22,9 @@ const CATEGORY_IMAGES: Record<string, Record<string, string>> = {
     "MASSAGE": "https://lh3.googleusercontent.com/aida-public/AB6AXuDN1Wt0lGXd806SkG8Fj_2JRI9G_b2F7b2nX60mLw6o9As0lOYWdI9siDjCOXahBnAAATbbd_kGdmanEeOwIMXJ5ZKi7EbmwoVT6AIn2sBz7FiRSaqKCbsf6i88ZkfO8DtX8jXUiHIUJ323Mw6ZXip_1RxPKdM3Dq78Dv2g76_439f5xbzL8JEj1tf3_PYVYOAc9OdqmJnIaxZpiI8G92yU8heHaSjL3D8mF3m-Izpeap6f_pq_AdBVwn-hhIzeV1P5EVqR3PSBRctU",
     "FACIAL": "https://lh3.googleusercontent.com/aida-public/AB6AXuBjZugcVretu-rl9yNta6uLgiF5BDGrfXDGIIye952pF3Pko_J4dBBWny5aosls6TDlw5yg6c653-F7jeo6QvkIsyb1tHVLOkG2rDtVtRMd7EcRfnbdH-QKq0r4RY9Mu8OAtYIA8zFqvBIS9mwW_tvcb6u1Ef8HP2EIre4ry7kzoVZKtMnonrCkNtCz6yHECyYAOODqo0gBx3cLYwxusROAzcEOjFZIW2SQfTxvoEOzQaFXA61LGeeAx7Y0jbxEVf17-jUNBPHhDxun",
     "BEARD": "https://lh3.googleusercontent.com/aida-public/AB6AXuBMA6P4b5OkcBylTvcyVk2gDYh17iDrBU2b4DYA4QE0A8kz8Clj1ANmSlAtBMQVOlCgn1ZUEg5i57ta4y2nbQBwN07Oh9jgItdhJINcIv-mX3X3kVEcE3SSe_6UtvM3RU_BOV0pF9Ae2LSN9YUVH6aG717FsoClRoJHSHDa2Zi-_RRH6Q31QNWRwQdtgYaM1b3-_HiRO6dh7tIeDlh9C3djV8sDeSUsVzlPOp9H4KbjWdAxAjWK5vBad1pGBgzlG-pmnW3wXsgznhGo",
+    "WAXING": "https://images.unsplash.com/photo-1599839619722-39751411ea63?w=800&q=75&fit=crop&auto=format",
+    "HAIR_SPA": "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&q=75&fit=crop&auto=format",
+    "OTHER": "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=75&fit=crop&auto=format",
     "DEFAULT": "https://lh3.googleusercontent.com/aida-public/AB6AXuCgFHRy78LcO4So8cu4g0Gfcvk-Vk9vRBtwKCo_iRKIlzKqrdhnRWyF2aI1du-I2OWPvRl9BPjcYOBefYbBceBH9DYHU-oYz58A8FAvFW1gLFYzYJsDaOPJomH9P1ACxzyzPjaimnax2ZEOkx869HyF8qOAr8pNskCDI16XF86Sc8dlMM-N-zd2D5LD-sgM-AmPn5cy90Ng0-xooC6x3WQClYPiVvCa6njnQLNKXJgdtHQ0KicwirXyMnU4w9D37Ts54_PxQMjgvoBI"
   },
   FEMALE: {
@@ -30,6 +33,8 @@ const CATEGORY_IMAGES: Record<string, Record<string, string>> = {
     "MASSAGE": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=75&fit=crop&auto=format",
     "FACIAL": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=75&fit=crop&auto=format",
     "WAXING": "https://images.unsplash.com/photo-1512496015851-a1c84883492e?w=800&q=75&fit=crop&auto=format",
+    "HAIR_SPA": "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=75&fit=crop&auto=format",
+    "OTHER": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=75&fit=crop&auto=format",
     "DEFAULT": "https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?w=800&q=75&fit=crop&auto=format"
   },
   UNISEX: {
@@ -39,6 +44,8 @@ const CATEGORY_IMAGES: Record<string, Record<string, string>> = {
     "FACIAL": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=75&fit=crop&auto=format",
     "BEARD": "https://lh3.googleusercontent.com/aida-public/AB6AXuBMA6P4b5OkcBylTvcyVk2gDYh17iDrBU2b4DYA4QE0A8kz8Clj1ANmSlAtBMQVOlCgn1ZUEg5i57ta4y2nbQBwN07Oh9jgItdhJINcIv-mX3X3kVEcE3SSe_6UtvM3RU_BOV0pF9Ae2LSN9YUVH6aG717FsoClRoJHSHDa2Zi-_RRH6Q31QNWRwQdtgYaM1b3-_HiRO6dh7tIeDlh9C3djV8sDeSUsVzlPOp9H4KbjWdAxAjWK5vBad1pGBgzlG-pmnW3wXsgznhGo",
     "WAXING": "https://images.unsplash.com/photo-1512496015851-a1c84883492e?w=800&q=75&fit=crop&auto=format",
+    "HAIR_SPA": "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=75&fit=crop&auto=format",
+    "OTHER": "https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?w=800&q=75&fit=crop&auto=format",
     "DEFAULT": "https://images.unsplash.com/photo-1522337360788-8b13fee7a3af?w=800&q=75&fit=crop&auto=format"
   }
 };
