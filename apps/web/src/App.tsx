@@ -6,6 +6,9 @@ import ShopDetailPage from "./pages/ShopDetailPage";
 import BookingConfirmPage from "./pages/BookingConfirmPage";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
+import AboutPage from "./pages/AboutPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -34,6 +37,9 @@ export default function App() {
       <Route path="/booking/confirm" element={<BookingConfirmPage />} />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
       <Route path="/auth/login" element={<AuthPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
