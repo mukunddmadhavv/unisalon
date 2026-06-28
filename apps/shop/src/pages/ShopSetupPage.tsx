@@ -1,206 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, ChevronRight, Compass, ChevronLeft, Save, Move, ZoomIn, ZoomOut, X } from "lucide-react";
+import { ChevronRight, Compass, ChevronLeft, Save } from "lucide-react";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
 
-// ── ImageCropper Component (Canvas-based 16:9) ──────────────────────
-const CANVAS_W = 640;
-const CANVAS_H = 360; // 16:9 aspect ratio
-
-interface CropperProps {
-  src: string;
-  onCropped: (blob: Blob) => void;
-  onCancel: () => void;
-}
-
-function ImageCropper({ src, onCropped, onCancel }: CropperProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    const img = imgRef.current;
-    if (!canvas || !ctx || !img) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-    // Calculate dimensions to cover canvas (crop fill)
-    const imgRatio = img.width / img.height;
-    const canvasRatio = CANVAS_W / CANVAS_H;
-    let drawW = CANVAS_W;
-    let drawH = CANVAS_H;
-
-    if (imgRatio > canvasRatio) {
-      drawW = CANVAS_H * imgRatio;
-    } else {
-      drawH = CANVAS_W / imgRatio;
-    }
-
-    // Apply scale & offsets
-    const w = drawW * scale;
-    const h = drawH * scale;
-
-    // Constrain offset to keep canvas covered
-    const minX = CANVAS_W - w;
-    const minY = CANVAS_H - h;
-    const x = Math.min(0, Math.max(minX, offset.x + (CANVAS_W - w) / 2));
-    const y = Math.min(0, Math.max(minY, offset.y + (CANVAS_H - h) / 2));
-
-    ctx.drawImage(img, x, y, w, h);
-
-    // Draw grid overlay (optional, subtle)
-    ctx.strokeStyle = "rgba(255,255,255,0.2)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, CANVAS_W, CANVAS_H);
-  }, [scale, offset]);
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      imgRef.current = img;
-      draw();
-    };
-    img.src = src;
-  }, [src, draw]);
-
-  useEffect(() => {
-    draw();
-  }, [draw]);
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    setDragging(true);
-    lastPos.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return;
-    const dx = e.clientX - lastPos.current.x;
-    const dy = e.clientY - lastPos.current.y;
-    lastPos.current = { x: e.clientX, y: e.clientY };
-    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-  };
-
-  const onMouseUp = () => setDragging(false);
-
-  // Touch support
-  const onTouchStart = (e: React.TouchEvent) => {
-    setDragging(true);
-    lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  };
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!dragging) return;
-    const dx = e.touches[0].clientX - lastPos.current.x;
-    const dy = e.touches[0].clientY - lastPos.current.y;
-    lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-  };
-
-  const handleCrop = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.toBlob((blob) => {
-      if (blob) onCropped(blob);
-    }, "image/jpeg", 0.92);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1a1c1d] text-white rounded-xl overflow-hidden max-w-2xl w-full shadow-2xl border border-white/10">
-        {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-white">Adjust Cover Photo</h3>
-            <p className="text-xs text-gray-400 mt-1">Drag to reposition · Scroll or use buttons to zoom</p>
-          </div>
-          <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Canvas */}
-        <div className="relative bg-black flex justify-center">
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/60 rounded-full px-3 py-1 text-xs text-white/80 flex items-center gap-1.5 pointer-events-none z-10">
-            <Move size={12} /> Drag to reposition
-          </div>
-          <canvas
-            ref={canvasRef}
-            width={CANVAS_W}
-            height={CANVAS_H}
-            className={`max-w-full h-auto cursor-${dragging ? "grabbing" : "grab"}`}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseUp}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onMouseUp}
-            onWheel={(e) => {
-              e.preventDefault();
-              setScale((prev) => Math.min(4, Math.max(1, prev - e.deltaY * 0.002)));
-            }}
-          />
-          <div className="absolute bottom-3 right-3 bg-black/60 rounded px-2 py-0.5 text-[10px] text-white/60 font-bold">
-            16:9
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="p-5 flex items-center gap-4 border-t border-white/10">
-          <div className="flex items-center gap-2.5 flex-1">
-            <button
-              type="button"
-              onClick={() => setScale((prev) => Math.max(1, prev - 0.15))}
-              className="p-2 hover:bg-white/10 rounded-lg text-white"
-            >
-              <ZoomOut size={16} />
-            </button>
-            <input
-              type="range"
-              min={1}
-              max={4}
-              step={0.01}
-              value={scale}
-              onChange={(e) => setScale(Number(e.target.value))}
-              className="w-full accent-primary cursor-pointer"
-            />
-            <button
-              type="button"
-              onClick={() => setScale((prev) => Math.min(4, prev + 0.15))}
-              className="p-2 hover:bg-white/10 rounded-lg text-white"
-            >
-              <ZoomIn size={16} />
-            </button>
-            <span className="text-xs text-gray-400 min-w-[36px] text-right">{Math.round(scale * 100)}%</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }}
-            className="px-4 py-2 border border-white/20 rounded-lg text-sm text-gray-300 hover:bg-white/5"
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            onClick={handleCrop}
-            className="px-5 py-2 bg-primary text-white font-semibold rounded-lg text-sm hover:opacity-90 active:scale-95 transition-all"
-          >
-            Apply Crop
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Main ShopSetupPage Component ───────────────────────────────────
 interface FormState {
@@ -224,10 +29,8 @@ export default function ShopSetupPage() {
   const qc = useQueryClient();
 
   const [step, setStep] = useState(1);
-  const [rawSrc, setRawSrc] = useState(""); // for cropper
-  const [showCropper, setShowCropper] = useState(false);
-  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
-  const [croppedPreview, setCroppedPreview] = useState(""); // object URL for preview
+  const [galleryImages, setGalleryImages] = useState<string[]>(Array(10).fill(""));
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   const [form, setForm] = useState<FormState>({
     name: "",
@@ -276,9 +79,15 @@ export default function ShopSetupPage() {
         latitude: existingShop.latitude ? String(existingShop.latitude) : "",
         longitude: existingShop.longitude ? String(existingShop.longitude) : "",
       });
-      if (existingShop.coverImage) {
-        setCroppedPreview(existingShop.coverImage);
+      const initialImages: string[] = [];
+      if (existingShop.coverImage) initialImages.push(existingShop.coverImage);
+      if (existingShop.images && Array.isArray(existingShop.images)) {
+        initialImages.push(...existingShop.images);
       }
+      while (initialImages.length < 10) {
+        initialImages.push("");
+      }
+      setGalleryImages(initialImages);
     }
   }, [existingShop]);
 
@@ -305,45 +114,55 @@ export default function ShopSetupPage() {
     );
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (f.size > 10 * 1024 * 1024) {
+  const handleUploadImageClick = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
       toast.error("Image must be under 10 MB");
       return;
     }
-    setRawSrc(URL.createObjectURL(f));
-    setShowCropper(true);
-    e.target.value = "";
+
+    setUploadingIndex(index);
+    try {
+      const path = `shops/${existingShop?.id || "temp"}/gallery_${index}_${Date.now()}`;
+      const url = await api.uploadFile(file, "shop-images", path);
+      
+      setGalleryImages((prev) => {
+        const next = [...prev];
+        next[index] = url;
+        return next;
+      });
+      toast.success(`Photo #${index + 1} uploaded!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingIndex(null);
+    }
   };
 
-  const handleCropped = (blob: Blob) => {
-    setCroppedBlob(blob);
-    if (croppedPreview && !croppedPreview.startsWith("http")) URL.revokeObjectURL(croppedPreview);
-    setCroppedPreview(URL.createObjectURL(blob));
-    setShowCropper(false);
+  const handleRemoveImageClick = (index: number) => {
+    setGalleryImages((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
   };
 
-  const clearPhoto = () => {
-    setCroppedBlob(null);
-    setCroppedPreview("");
-    setRawSrc("");
-  };
+  const croppedPreview = galleryImages.find((url) => url !== "") || "";
 
   // Mutation to create a new shop (Wizard setup flow)
   const createMutation = useMutation({
     mutationFn: async () => {
-      let coverImage = "";
-      if (croppedBlob) {
-        const uploadFile = new File([croppedBlob], `cover-${Date.now()}.jpg`, { type: "image/jpeg" });
-        const path = `covers/${Date.now()}-${form.name.replace(/\s+/g, "-").toLowerCase()}.jpg`;
-        coverImage = await api.uploadFile(uploadFile, "shop-images", path);
+      const activeUrls = galleryImages.filter((url) => url !== "");
+      if (activeUrls.length < 2) {
+        throw new Error("You must upload at least 2 photos (the Cover Image and at least one secondary photo) before submitting.");
       }
       return api.createShop({
         ...form,
         latitude: form.latitude ? Number(form.latitude) : undefined,
         longitude: form.longitude ? Number(form.longitude) : undefined,
-        coverImage,
+        coverImage: activeUrls[0],
+        images: activeUrls.slice(1),
       });
     },
     onSuccess: () => {
@@ -357,17 +176,16 @@ export default function ShopSetupPage() {
   // Mutation to update an existing shop (Shop Profile editor flow)
   const updateMutation = useMutation({
     mutationFn: async () => {
-      let coverImage = existingShop?.coverImage;
-      if (croppedBlob) {
-        const uploadFile = new File([croppedBlob], `cover-${Date.now()}.jpg`, { type: "image/jpeg" });
-        const path = `covers/${Date.now()}-${form.name.replace(/\s+/g, "-").toLowerCase()}.jpg`;
-        coverImage = await api.uploadFile(uploadFile, "shop-images", path);
+      const activeUrls = galleryImages.filter((url) => url !== "");
+      if (activeUrls.length < 2) {
+        throw new Error("You must upload at least 2 photos before saving changes.");
       }
       return api.updateShop(existingShop.id, {
         ...form,
         latitude: form.latitude ? Number(form.latitude) : undefined,
         longitude: form.longitude ? Number(form.longitude) : undefined,
-        coverImage,
+        coverImage: activeUrls[0],
+        images: activeUrls.slice(1),
       });
     },
     onSuccess: () => {
@@ -390,10 +208,6 @@ export default function ShopSetupPage() {
     const isSaveDisabled = updateMutation.isPending || !form.name || !form.address || !form.city || !form.district || !form.pincode;
     return (
       <>
-        {showCropper && rawSrc && (
-          <ImageCropper src={rawSrc} onCropped={handleCropped} onCancel={() => setShowCropper(false)} />
-        )}
-
         <div className="animate-fade-in">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
@@ -414,51 +228,15 @@ export default function ShopSetupPage() {
           {/* Bento grid layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Business Details (Left Panel) */}
-            <section className="lg:col-span-8 bento-card p-6 rounded-xl space-y-6">
-              <h3 className="font-display text-base font-bold text-on-surface flex items-center gap-2 border-b border-surface-container-high pb-4 mb-2">
-                <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
-                Business Details
-              </h3>
+            <section className="lg:col-span-8 space-y-6">
+              {/* General business details */}
+              <div className="bento-card p-6 rounded-xl space-y-4">
+                <h3 className="font-display text-base font-bold text-on-surface flex items-center gap-2 border-b border-surface-container-high pb-4 mb-2">
+                  <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+                  Business Details
+                </h3>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Logo / Cover photo upload */}
-                <div className="flex flex-col items-center gap-4 flex-shrink-0">
-                  <label className="font-sans font-bold text-xs text-on-surface-variant self-start">Cover Photo</label>
-                  {croppedPreview ? (
-                    <div className="w-48 h-28 rounded-xl overflow-hidden border border-surface-container-high relative group">
-                      <img src={croppedPreview} alt="Cover preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={() => document.getElementById("cover-upload-edit")?.click()}
-                          className="p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={clearPhoto}
-                          className="p-1.5 bg-white/20 hover:bg-white/30 text-error rounded-full transition-all"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      onClick={() => document.getElementById("cover-upload-edit")?.click()}
-                      className="w-48 h-28 rounded-xl bg-surface-container flex flex-col items-center justify-center border border-dashed border-surface-container-high relative group cursor-pointer hover:border-primary transition-colors overflow-hidden"
-                    >
-                      <span className="material-symbols-outlined text-outline text-[28px] group-hover:text-primary transition-colors">add_photo_alternate</span>
-                      <span className="font-sans text-[10px] font-bold text-outline mt-1 group-hover:text-primary">Upload Cover</span>
-                    </div>
-                  )}
-                  <input id="cover-upload-edit" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
-                  <p className="text-[10px] text-center text-on-surface-variant max-w-[150px]">Recommends 16:9 landscape aspect ratio. Max 10MB.</p>
-                </div>
-
-                {/* Fields */}
-                <div className="flex-grow space-y-4">
+                <div className="space-y-4">
                   <div>
                     <label className="label">Business Name *</label>
                     <input
@@ -478,6 +256,64 @@ export default function ShopSetupPage() {
                       placeholder="Introduce your salon, specialty services, and experience..."
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Media Gallery grid */}
+              <div className="bento-card p-6 rounded-xl space-y-4">
+                <h3 className="font-display text-base font-bold text-on-surface flex items-center gap-2 border-b border-surface-container-high pb-4 mb-2">
+                  <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>image</span>
+                  Media Gallery (Min 2, Max 10 photos)
+                </h3>
+                <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
+                  Upload up to 10 photos of your salon. 
+                  The <strong>first photo</strong> in the sequence will automatically be set as your Cover Photo.
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {galleryImages.map((imageUrl, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-square border border-surface-container-high bg-surface-container rounded-xl overflow-hidden group flex flex-col items-center justify-center transition-all hover:border-primary"
+                    >
+                      {imageUrl ? (
+                        <>
+                          <img src={imageUrl} alt={`Gallery #${idx + 1}`} className="w-full h-full object-cover" />
+                          
+                          <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-surface-container-high/40">
+                            {idx === 0 ? "1 (Cover)" : idx + 1}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImageClick(idx)}
+                            className="absolute top-2 right-2 p-1 bg-error hover:bg-error/90 text-white rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Remove Photo"
+                          >
+                            <span className="material-symbols-outlined text-[12px] block">close</span>
+                          </button>
+                        </>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer p-4 text-center hover:bg-surface-container-low select-none">
+                          {uploadingIndex === idx ? (
+                            <div className="w-5 h-5 border-2 border-surface-container-high border-t-primary rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-outline text-[20px] mb-1">add_photo_alternate</span>
+                              <span className="font-sans text-[9px] font-bold text-outline">Photo #{idx + 1}</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingIndex !== null}
+                            onChange={(e) => handleUploadImageClick(idx, e)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -705,9 +541,6 @@ export default function ShopSetupPage() {
   // ── RENDER 2: FIRST TIME SETUP WIZARD (If shop does not exist) ────
   return (
     <>
-      {showCropper && rawSrc && (
-        <ImageCropper src={rawSrc} onCropped={handleCropped} onCancel={() => setShowCropper(false)} />
-      )}
 
       <div className="min-h-screen bg-surface flex items-center justify-center p-6 select-none font-sans">
         <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-xl border border-outline-variant animate-slide-up">
@@ -959,44 +792,60 @@ export default function ShopSetupPage() {
             <div className="space-y-5">
               <h2 className="font-display text-lg font-bold text-on-surface flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">image</span>
-                Cover Photo Upload
+                Media Gallery (Min 2, Max 10 photos)
               </h2>
+              
+              <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
+                Upload up to 10 photos of your salon. 
+                The <strong>first photo</strong> in the sequence will automatically be set as your Cover Photo.
+              </p>
+
               <div className="space-y-4">
-                {croppedPreview ? (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-surface-container-high bg-surface-container group">
-                    <img src={croppedPreview} alt="Cover preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("cover-upload-wz")?.click()}
-                        className="px-4 py-2 bg-white text-black font-semibold text-xs rounded-lg shadow-md hover:bg-primary-container hover:text-white transition-all"
-                      >
-                        Change Photo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearPhoto}
-                        className="px-4 py-2 bg-error text-white font-semibold text-xs rounded-lg shadow-md hover:opacity-90 transition-all"
-                      >
-                        Remove
-                      </button>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {galleryImages.map((imageUrl, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-square border border-surface-container-high bg-surface-container rounded-xl overflow-hidden group flex flex-col items-center justify-center transition-all hover:border-primary"
+                    >
+                      {imageUrl ? (
+                        <>
+                          <img src={imageUrl} alt={`Gallery #${idx + 1}`} className="w-full h-full object-cover" />
+                          
+                          <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-surface-container-high/40">
+                            {idx === 0 ? "1 (Cover)" : idx + 1}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImageClick(idx)}
+                            className="absolute top-2 right-2 p-1 bg-error hover:bg-error/90 text-white rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Remove Photo"
+                          >
+                            <span className="material-symbols-outlined text-[12px] block">close</span>
+                          </button>
+                        </>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer p-4 text-center hover:bg-surface-container-low select-none">
+                          {uploadingIndex === idx ? (
+                            <div className="w-5 h-5 border-2 border-surface-container-high border-t-primary rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-outline text-[20px] mb-1">add_photo_alternate</span>
+                              <span className="font-sans text-[9px] font-bold text-outline">Photo #{idx + 1}</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingIndex !== null}
+                            onChange={(e) => handleUploadImageClick(idx, e)}
+                          />
+                        </label>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => document.getElementById("cover-upload-wz")?.click()}
-                    className="aspect-video flex flex-col items-center justify-center gap-3 border-2 border-dashed border-surface-container-high rounded-xl cursor-pointer hover:border-primary hover:bg-surface-container-low transition-colors"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                      <Upload size={22} />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-sans font-bold text-sm text-on-surface">Click to upload cover photo</p>
-                      <p className="font-sans text-xs text-on-surface-variant mt-0.5">JPG, PNG, WebP · Max 10 MB · 16:9 recommended</p>
-                    </div>
-                  </div>
-                )}
-                <input id="cover-upload-wz" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+                  ))}
+                </div>
 
                 {/* Storage Info Box */}
                 <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 items-start">

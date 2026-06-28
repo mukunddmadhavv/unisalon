@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "../components/AdminLayout";
 import { api } from "../lib/api";
 import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
-import { Store, User, Scissors, Calendar, Check, Trash2, Edit, Plus, ArrowLeft } from "lucide-react";
+import { Store, User, Scissors, Calendar, Check, Trash2, Edit, Plus, ArrowLeft, Image as ImageIcon, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Shop {
@@ -20,6 +20,8 @@ interface Shop {
   openTime: string;
   closeTime: string;
   workingDays: string[];
+  coverImage?: string;
+  images?: string[];
 }
 
 interface Service {
@@ -48,13 +50,17 @@ const DAYS_OF_WEEK = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 export default function ManageShopPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"profile" | "services" | "staff">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "gallery" | "services" | "staff">("profile");
 
   // State for forms
   const [showAddService, setShowAddService] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+
+  // Gallery state (10 slots)
+  const [galleryImages, setGalleryImages] = useState<string[]>(Array(10).fill(""));
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Queries
   const { data: shop, isLoading: loadingShop } = useQuery<Shop>({
@@ -75,12 +81,27 @@ export default function ManageShopPage() {
     enabled: !!id,
   });
 
+  // Initialize gallery state from shop details
+  useEffect(() => {
+    if (shop) {
+      const initialImages: string[] = [];
+      if (shop.coverImage) initialImages.push(shop.coverImage);
+      if (shop.images && Array.isArray(shop.images)) {
+        initialImages.push(...shop.images);
+      }
+      while (initialImages.length < 10) {
+        initialImages.push("");
+      }
+      setGalleryImages(initialImages);
+    }
+  }, [shop]);
+
   // Mutations
   const updateShopMutation = useMutation({
     mutationFn: (data: Partial<Shop>) => api.updateShopForAdmin(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-manage-shop", id] });
-      toast.success("Shop profile updated successfully!");
+      toast.success("Shop details updated successfully!");
     },
     onError: (err: any) => toast.error(err.message || "Failed to update shop"),
   });
@@ -221,6 +242,55 @@ export default function ManageShopPage() {
     updateStaffMutation.mutate({ staffId: editingStaff.id, data });
   };
 
+  // Image Upload handler
+  const handleUploadImageClick = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingIndex(index);
+    try {
+      const path = `shops/${id}/gallery_${index}_${Date.now()}`;
+      const url = await api.uploadFile(file, "shops", path);
+      
+      setGalleryImages((prev) => {
+        const next = [...prev];
+        next[index] = url;
+        return next;
+      });
+      toast.success(`Photo #${index + 1} uploaded successfully!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingIndex(null);
+    }
+  };
+
+  const handleRemoveImageClick = (index: number) => {
+    setGalleryImages((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+  };
+
+  const handleSaveGallery = () => {
+    // Compact empty slots to keep photos sequential
+    const activeUrls = galleryImages.filter((url) => url !== "");
+
+    if (activeUrls.length < 2) {
+      toast.error("You must upload at least 2 photos (the Cover Image and at least one secondary photo) before saving.");
+      return;
+    }
+
+    // Set first image as coverImage, rest as images array
+    const data = {
+      coverImage: activeUrls[0],
+      images: activeUrls.slice(1),
+    };
+
+    updateShopMutation.mutate(data);
+  };
+
   // State-district linkage inside form
   const [formState, setFormState] = useState("");
   const formDistricts = STATES_AND_DISTRICTS[formState] ?? [];
@@ -264,13 +334,13 @@ export default function ManageShopPage() {
         </Link>
         <PageHeader
           title={`Configure ${shop.name}`}
-          subtitle={`Admin direct control panel to edit settings, services, and staff for ${shop.name}.`}
+          subtitle={`Admin direct control panel to edit settings, gallery, services, and staff for ${shop.name}.`}
         />
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-surface-border">
-        {(["profile", "services", "staff"] as const).map((tab) => (
+        {(["profile", "gallery", "services", "staff"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -408,6 +478,81 @@ export default function ManageShopPage() {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Gallery Tab */}
+      {activeTab === "gallery" && (
+        <div className="card p-6 space-y-6">
+          <h3 className="font-bold text-base text-white border-b border-surface-border pb-3 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <ImageIcon size={18} className="text-brand-400" /> Salon Media Gallery
+            </span>
+            <span className="text-xs text-gray-400 font-normal">
+              Minimum 2 photos, Maximum 10 photos
+            </span>
+          </h3>
+
+          <p className="text-xs text-gray-400 max-w-2xl leading-relaxed">
+            Upload pictures of your salon interior, exterior, or styling results. 
+            <strong> Photo #1</strong> will automatically be set as the <strong>Cover Image</strong> displayed on the customer web portal.
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {galleryImages.map((imageUrl, idx) => (
+              <div
+                key={idx}
+                className="relative aspect-square border border-surface-border bg-surface rounded-xl overflow-hidden group flex flex-col items-center justify-center transition-all hover:border-brand-500"
+              >
+                {imageUrl ? (
+                  <>
+                    <img src={imageUrl} alt={`Gallery #${idx + 1}`} className="w-full h-full object-cover" />
+                    
+                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded border border-surface-border/40">
+                      {idx === 0 ? "1 (Cover)" : idx + 1}
+                    </div>
+
+                    <button
+                      onClick={() => handleRemoveImageClick(idx)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove Photo"
+                    >
+                      <X size={12} />
+                    </button>
+                  </>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer p-4 text-center hover:bg-surface/40 select-none">
+                    {uploadingIndex === idx ? (
+                      <div className="w-6 h-6 border-2 border-surface-border border-t-brand-500 rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Upload size={18} className="text-gray-500 mb-1.5" />
+                        <span className="text-[10px] font-bold text-gray-400">Photo #{idx + 1}</span>
+                        {idx === 0 && <span className="text-[8px] text-brand-400 mt-0.5">(Cover Image)</span>}
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingIndex !== null}
+                      onChange={(e) => handleUploadImageClick(idx, e)}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-3 border-t border-surface-border pt-6 mt-4">
+            <button
+              onClick={handleSaveGallery}
+              disabled={updateShopMutation.isPending || uploadingIndex !== null}
+              className="bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-bold text-sm px-6 py-2.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+            >
+              <Check size={16} /> Save Gallery
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Services Tab */}

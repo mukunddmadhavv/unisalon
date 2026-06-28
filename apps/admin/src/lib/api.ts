@@ -85,4 +85,32 @@ export const api = {
 
   // ── Admin: Onboarded Invite Codes ───────────────────────────────
   getOnboardedCodes: () => request<any>("/api/admin/onboarded-codes"),
+
+  // ── Upload to Supabase Storage (via backend API to bypass RLS) ────
+  async uploadFile(file: File, bucket: string, path: string): Promise<string> {
+    const token = (window as any).Clerk?.session
+      ? await (window as any).Clerk.session.getToken()
+      : null;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", bucket);
+    formData.append("path", path);
+
+    const headers: HeadersInit = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    const res = await fetch(`${API}/api/owner/upload`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    const json = await res.json();
+    if (!json.success) {
+      throw new Error(json.error ?? "Failed to upload file to backend");
+    }
+    return json.data.url;
+  },
 };

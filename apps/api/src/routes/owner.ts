@@ -207,6 +207,8 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
         openTime: t.String(),
         closeTime: t.String(),
         workingDays: t.Array(t.String()),
+        coverImage: t.Optional(t.String()),
+        images: t.Optional(t.Array(t.String())),
       })),
     }
   )
