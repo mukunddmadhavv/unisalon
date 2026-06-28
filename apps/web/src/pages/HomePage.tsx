@@ -491,10 +491,6 @@ export default function HomePage() {
                           ✂️
                         </div>
                       )}
-                      {/* Offer Tag Mockup overlay */}
-                      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded text-primary font-bold text-[10px] tracking-wider uppercase border border-border-light/40">
-                        40% OFF
-                      </div>
                     </div>
 
                     <div className="p-4 flex justify-between items-start gap-4">
