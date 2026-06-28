@@ -250,7 +250,7 @@ export default function ManageShopPage() {
     setUploadingIndex(index);
     try {
       const path = `shops/${id}/gallery_${index}_${Date.now()}`;
-      const url = await api.uploadFile(file, "shops", path);
+      const url = await api.uploadFile(file, "shop-images", path);
       
       setGalleryImages((prev) => {
         const next = [...prev];
