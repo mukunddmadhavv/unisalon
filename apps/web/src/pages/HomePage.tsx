@@ -12,6 +12,7 @@ interface Shop {
   slug: string;
   description?: string;
   category: string;
+  address: string;
   coverImage?: string;
   rating: number;
   totalReviews: number;
@@ -515,7 +516,7 @@ export default function HomePage() {
                         </p>
                         
                         <p className="text-text-secondary text-xs mt-0.5">
-                          {shop.city}, {shop.district}
+                          {shop.address}
                           {shop.distanceKm !== undefined && shop.distanceKm !== null
                             ? ` • ${shop.distanceKm.toFixed(1)} km`
                             : ""}
