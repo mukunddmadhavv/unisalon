@@ -33,7 +33,13 @@ const app = new Elysia()
       path: "/docs",
     })
   )
-  // Health check
+  // Health check & Root landing
+  .get("/", () => ({
+    status: "ok",
+    message: "UniSalon API is live!",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0",
+  }))
   .get("/health", () => ({
     status: "ok",
     timestamp: new Date().toISOString(),
