@@ -457,7 +457,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((n) => (
                   <div key={n} className="rounded-xl overflow-hidden bg-white border border-border-light shadow-sm">
-                    <div className="skeleton aspect-[4/3] w-full" />
+                    <div className="skeleton aspect-[16/9] w-full" />
                     <div className="p-4 space-y-2">
                       <div className="skeleton h-5 w-1/3" />
                       <div className="skeleton h-4 w-1/2" />
@@ -479,7 +479,7 @@ export default function HomePage() {
                     to={`/shop/${shop.slug}`}
                     className="group cursor-pointer block bg-white rounded-2xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
                   >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden">
                       {shop.coverImage ? (
                         <img
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

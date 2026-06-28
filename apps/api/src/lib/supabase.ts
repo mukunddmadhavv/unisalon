@@ -71,6 +71,11 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
     // Read the role from Clerk metadata if present
     const roleFromMetadata = clerkUser.publicMetadata?.role as string | undefined;
 
+    // If user is an admin, return ADMIN role immediately (highest privilege)
+    if (isAdmin || roleFromMetadata === "ADMIN") {
+      return { supabaseId: userId, email: email, role: "ADMIN" };
+    }
+
     // Check shop owner
     let owner = await prisma.shopOwner.findUnique({
       where: { supabaseId: userId },
@@ -111,16 +116,12 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
             email: email,
             name: name,
             phone: phone,
-            role: isAdmin ? "ADMIN" : "CUSTOMER",
+            role: "CUSTOMER", // User is not an admin if they reached here
           },
         });
       } catch (e) {
         console.error("Failed to auto-create user on token verification:", e);
       }
-    }
-
-    if (isAdmin || roleFromMetadata === "ADMIN") {
-      return { supabaseId: userId, email: email, role: "ADMIN" };
     }
 
     // Default: customer

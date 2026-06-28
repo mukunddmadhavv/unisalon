@@ -5,6 +5,7 @@ import { PageHeader } from "../components/AdminLayout";
 import { api } from "../lib/api";
 import { STATES, STATES_AND_DISTRICTS } from "../lib/locationData";
 import { Store, User, Scissors, Calendar, Check, Trash2, Edit, Plus, ArrowLeft, Image as ImageIcon, Upload, X } from "lucide-react";
+import { ImageCropperModal } from "@unisalon/ui";
 import toast from "react-hot-toast";
 
 interface Shop {
@@ -61,6 +62,8 @@ export default function ManageShopPage() {
   // Gallery state (10 slots)
   const [galleryImages, setGalleryImages] = useState<string[]>(Array(10).fill(""));
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [cropModalSrc, setCropModalSrc] = useState<string | null>(null);
+  const [cropModalIndex, setCropModalIndex] = useState<number | null>(null);
 
   // Queries
   const { data: shop, isLoading: loadingShop } = useQuery<Shop>({
@@ -243,12 +246,28 @@ export default function ManageShopPage() {
   };
 
   // Image Upload handler
-  const handleUploadImageClick = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadImageClick = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropModalSrc(reader.result as string);
+      setCropModalIndex(index);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleCropComplete = async (blob: Blob) => {
+    if (cropModalIndex === null) return;
+    const index = cropModalIndex;
+    setCropModalSrc(null);
+    setCropModalIndex(null);
+
     setUploadingIndex(index);
     try {
+      const file = new File([blob], `image_${Date.now()}.jpg`, { type: 'image/jpeg' });
       const path = `shops/${id}/gallery_${index}_${Date.now()}`;
       const url = await api.uploadFile(file, "shop-images", path);
       
@@ -841,6 +860,17 @@ export default function ManageShopPage() {
             )}
           </div>
         </div>
+      )}
+      {cropModalSrc && (
+        <ImageCropperModal
+          imageSrc={cropModalSrc}
+          onClose={() => {
+            setCropModalSrc(null);
+            setCropModalIndex(null);
+          }}
+          onCropComplete={handleCropComplete}
+          aspectRatio={16 / 9}
+        />
       )}
     </div>
   );

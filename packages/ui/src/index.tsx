@@ -107,3 +107,4 @@ export function Price({ paise, className }: { paise: number; className?: string 
 
 // Re-export
 export * from "lucide-react";
+export * from "./ImageCropperModal";

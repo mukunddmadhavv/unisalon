@@ -19,5 +19,8 @@
     "typescript": "^5.9.3",
     "prettier": "^3.5.3",
     "@types/bun": "^1.3.14"
+  },
+  "dependencies": {
+    "react-easy-crop": "^6.0.2"
   }
 }

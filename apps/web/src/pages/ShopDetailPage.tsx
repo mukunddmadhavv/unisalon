@@ -219,7 +219,7 @@ export default function ShopDetailPage() {
                   <img
                     src={img}
                     alt={`${shop.name} ${idx + 1}`}
-                    className="max-w-full max-h-full object-contain select-none"
+                    className="w-full h-full object-cover select-none"
                   />
                 </div>
               ))}
