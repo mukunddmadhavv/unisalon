@@ -37,11 +37,11 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       const skip = (Number(page) - 1) * 20;
 
       const where: Record<string, unknown> = {
-        ...(status && { status }),
-        ...(city && { city: { contains: city, mode: "insensitive" } }),
-        ...(district && { district: { contains: district, mode: "insensitive" } }),
-        ...(category && { category }),
-        ...(search && { name: { contains: search, mode: "insensitive" } }),
+        ...(status && status !== "undefined" && { status }),
+        ...(city && city !== "undefined" && { city: { contains: city, mode: "insensitive" } }),
+        ...(district && district !== "undefined" && { district: { contains: district, mode: "insensitive" } }),
+        ...(category && category !== "undefined" && { category }),
+        ...(search && search !== "undefined" && { name: { contains: search, mode: "insensitive" } }),
       };
 
       const [shops, total] = await Promise.all([

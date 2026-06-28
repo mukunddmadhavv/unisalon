@@ -42,14 +42,22 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   throw new Error("Response is not JSON");
 }
 
+const buildQuery = (params?: Record<string, any>) => {
+  if (!params) return "";
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "" && v !== "undefined")
+  );
+  const q = new URLSearchParams(clean as Record<string, string>).toString();
+  return q ? `?${q}` : "";
+};
+
 export const api = {
   // ── Admin: Dashboard KPIs ──────────────────────────────────────────
   getStats: () => request<any>("/api/admin/stats"),
 
   // ── Admin: Shops Directory & Verification ──────────────────────────
   getShops: (params?: { status?: string; city?: string; district?: string; category?: string; search?: string; page?: string }) => {
-    const q = new URLSearchParams(params as Record<string, string>).toString();
-    return request<any>(`/api/admin/shops${q ? `?${q}` : ""}`);
+    return request<any>(`/api/admin/shops${buildQuery(params)}`);
   },
   approveShop: (id: string) => request<any>(`/api/admin/shops/${id}/approve`, { method: "PUT" }),
   rejectShop: (id: string, reason: string) => request<any>(`/api/admin/shops/${id}/reject`, { method: "PUT", body: JSON.stringify({ reason }) }),
@@ -58,14 +66,12 @@ export const api = {
 
   // ── Admin: Users Directory ─────────────────────────────────────────
   getUsers: (params?: { search?: string; page?: string }) => {
-    const q = new URLSearchParams(params as Record<string, string>).toString();
-    return request<any>(`/api/admin/users${q ? `?${q}` : ""}`);
+    return request<any>(`/api/admin/users${buildQuery(params)}`);
   },
 
   // ── Admin: System Logs ─────────────────────────────────────────────
   getLogs: (params?: { action?: string; page?: string }) => {
-    const q = new URLSearchParams(params as Record<string, string>).toString();
-    return request<any>(`/api/admin/logs${q ? `?${q}` : ""}`);
+    return request<any>(`/api/admin/logs${buildQuery(params)}`);
   },
 
   // ── Admin: Onboard Shop ─────────────────────────────────────────────

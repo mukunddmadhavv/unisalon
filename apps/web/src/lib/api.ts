@@ -42,19 +42,26 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   throw new Error("Response is not JSON");
 }
 
+const buildQuery = (params?: Record<string, any>) => {
+  if (!params) return "";
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "" && v !== "undefined")
+  );
+  const q = new URLSearchParams(clean as Record<string, string>).toString();
+  return q ? `?${q}` : "";
+};
+
 export const api = {
   // ── Public: Shops & Geolocation ────────────────────────────────────
   getShops: (params?: { category?: string; search?: string; city?: string; district?: string; lat?: string; lng?: string; radius?: string; page?: string; sortBy?: string }) => {
-    const q = new URLSearchParams(params as Record<string, string>).toString();
-    return request<any>(`/api/shops${q ? `?${q}` : ""}`);
+    return request<any>(`/api/shops${buildQuery(params)}`);
   },
   getShopBySlug: (slug: string) => request<any>(`/api/shops/${slug}`),
   getDistricts: () => request<string[]>("/api/districts"),
 
   // ── Public: On-the-fly Slot availability ──────────────────────────
   getShopSlots: (shopId: string, params: { date: string; serviceIds: string }) => {
-    const q = new URLSearchParams(params).toString();
-    return request<any>(`/api/shops/${shopId}/slots?${q}`);
+    return request<any>(`/api/shops/${shopId}/slots${buildQuery(params)}`);
   },
 
   // ── Customer: Slot holds (BookMyShow) ─────────────────────────────

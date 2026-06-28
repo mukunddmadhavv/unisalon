@@ -42,6 +42,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   throw new Error("Response is not JSON");
 }
 
+const buildQuery = (params?: Record<string, any>) => {
+  if (!params) return "";
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "" && v !== "undefined")
+  );
+  const q = new URLSearchParams(clean as Record<string, string>).toString();
+  return q ? `?${q}` : "";
+};
+
 export const api = {
   // ── Owner: Auth / Register ───────────────────────────────
   registerOwner: (data: { name: string; phone: string }) =>
@@ -66,8 +75,7 @@ export const api = {
 
   // ── Owner: Bookings ───────────────────────────────────────
   getOwnerBookings: (params?: { date?: string; status?: string }) => {
-    const q = new URLSearchParams(params as Record<string, string>).toString();
-    return request(`/api/owner/bookings${q ? `?${q}` : ""}`);
+    return request(`/api/owner/bookings${buildQuery(params)}`);
   },
   updateBookingStatus: (id: string, status: string) =>
     request(`/api/owner/bookings/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
