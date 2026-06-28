@@ -3,6 +3,7 @@ import { prisma, type ServiceCategory } from "@unisalon/db";
 import { requireOwner } from "../middleware/auth";
 import { authPlugin } from "../middleware/auth";
 import { supabaseAdmin, clerkClient } from "../lib/supabase";
+import { fetchServiceImage } from "../lib/imageFetcher";
 import slugify from "slugify";
 
 const auth = requireOwner();
@@ -349,10 +350,17 @@ export const ownerRoutes = new Elysia({ prefix: "/api/owner" })
       });
       if (!shop) { set.status = 403; return { success: false, error: "Unauthorized" }; }
 
+      let { imageUrl } = serviceData;
+      if (!imageUrl) {
+        const fetchedUrl = await fetchServiceImage(serviceData.name, serviceData.category);
+        if (fetchedUrl) imageUrl = fetchedUrl;
+      }
+
       const service = await prisma.service.create({
         data: {
           shopId,
           ...serviceData,
+          imageUrl,
           category: serviceData.category as ServiceCategory,
         },
       });
