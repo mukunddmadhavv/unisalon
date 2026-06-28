@@ -203,7 +203,7 @@ export default function ShopDetailPage() {
 
       {/* Hero Section Carousel */}
       {slides.length > 0 && (
-        <section className="relative w-full aspect-[16/9] md:max-h-[400px] overflow-hidden bg-gray-100">
+        <section className="relative w-full aspect-[16/9] md:max-h-[400px] overflow-hidden bg-black">
           <div 
             className="w-full h-full relative"
             onTouchStart={onTouchStart}
@@ -215,11 +215,11 @@ export default function ShopDetailPage() {
               style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
             >
               {slides.map((img, idx) => (
-                <div key={idx} className="w-full h-full flex-shrink-0">
+                <div key={idx} className="w-full h-full flex-shrink-0 flex items-center justify-center bg-black">
                   <img
                     src={img}
                     alt={`${shop.name} ${idx + 1}`}
-                    className="w-full h-full object-cover select-none"
+                    className="max-w-full max-h-full object-contain select-none"
                   />
                 </div>
               ))}
