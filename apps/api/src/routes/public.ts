@@ -86,6 +86,7 @@ export const publicRoutes = new Elysia({ prefix: "/api" })
           isVerified: true, latitude: true, longitude: true,
           services: {
             where: { isActive: true },
+            orderBy: { price: 'asc' },
             select: { id: true, name: true, price: true, durationMins: true, category: true },
             take: 5,
           },
