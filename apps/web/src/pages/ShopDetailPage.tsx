@@ -35,6 +35,7 @@ interface ShopDetail {
   rating: number;
   totalReviews: number;
   coverImage?: string;
+  images?: string[];
   services: Service[];
   staff: StaffMember[];
 }
@@ -48,6 +49,11 @@ export default function ShopDetailPage() {
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [activeDateIndex, setActiveDateIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
+
+  // Carousel & Touch Swipe States
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const { data: shop, isLoading, error } = useQuery<ShopDetail>({
     queryKey: ["shop-detail", slug],
@@ -144,6 +150,29 @@ export default function ShopDetailPage() {
       ? shop.services
       : shop.services.filter((s) => s.category === activeCategory);
 
+  const gallery = shop.images?.filter((img) => img && img.trim() !== "") ?? [];
+  const slides = gallery.length > 0 ? gallery : (shop.coverImage ? [shop.coverImage] : []);
+
+  const minSwipeDistance = 50;
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      setActiveImageIndex((prev) => (prev + 1) % slides.length);
+    } else if (isRightSwipe) {
+      setActiveImageIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-28 font-body-md text-text-primary">
       
@@ -172,6 +201,73 @@ export default function ShopDetailPage() {
 
       {/* ── MAIN LAYOUT CONTAINER ── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        
+        {/* Salon Images Carousel */}
+        {slides.length > 0 && (
+          <div 
+            className="relative w-full h-64 sm:h-[400px] rounded-3xl overflow-hidden mb-6 group bg-gray-100 border border-border-light shadow-sm"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {/* Slides track */}
+            <div 
+              className="flex w-full h-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+            >
+              {slides.map((img, idx) => (
+                <div key={idx} className="w-full h-full flex-shrink-0">
+                  <img
+                    src={img}
+                    alt={`${shop.name} interior ${idx + 1}`}
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Navigation Arrows */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md transition-all active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                  <span className="material-symbols-outlined font-bold">chevron_left</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIndex((prev) => (prev + 1) % slides.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-primary flex items-center justify-center shadow-md transition-all active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                  <span className="material-symbols-outlined font-bold">chevron_right</span>
+                </button>
+              </>
+            )}
+
+            {/* Position Indicators (Dots) */}
+            {slides.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      activeImageIndex === idx ? "bg-white w-6" : "bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Image counter tag */}
+            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
+              {activeImageIndex + 1} / {slides.length} Photos
+            </div>
+          </div>
+        )}
         
         {/* Salon Header Card (Swiggy / Stitch Premium Style) */}
         <section className="bg-white p-6 rounded-2xl border border-border-light shadow-sm mb-6">
