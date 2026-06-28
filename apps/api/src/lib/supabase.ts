@@ -57,7 +57,16 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
 
     // Check if user is an admin by email
     const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim());
-    const isAdmin = adminEmails.includes(email);
+    let isAdmin = adminEmails.includes(email);
+
+    if (!isAdmin) {
+      const dbAdmin = await prisma.allowedAdminEmail.findUnique({
+        where: { email },
+      });
+      if (dbAdmin) {
+        isAdmin = true;
+      }
+    }
 
     // Read the role from Clerk metadata if present
     const roleFromMetadata = clerkUser.publicMetadata?.role as string | undefined;

@@ -74,6 +74,11 @@ export const api = {
     return request<any>(`/api/admin/logs${buildQuery(params)}`);
   },
 
+  // ── Admin: Manage Admins ───────────────────────────────────────────
+  getAdmins: () => request<any>("/api/admin/admins"),
+  addAdmin: (email: string) => request<any>("/api/admin/admins", { method: "POST", body: JSON.stringify({ email }) }),
+  removeAdmin: (email: string) => request<any>(`/api/admin/admins/${email}`, { method: "DELETE" }),
+
   // ── Admin: Onboard Shop ─────────────────────────────────────────────
   onboardShop: (data: any) => request<any>("/api/admin/shops/onboard", { method: "POST", body: JSON.stringify(data) }),
 

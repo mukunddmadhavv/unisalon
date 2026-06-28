@@ -220,6 +220,63 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
     { query: t.Object({ page: t.Optional(t.String()), action: t.Optional(t.String()) }) }
   )
 
+  // ── Manage Admins ──────────────────────────────────────────────────
+  .get("/admins", async () => {
+    const admins = await prisma.allowedAdminEmail.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return { success: true, data: admins };
+  })
+  .post(
+    "/admins",
+    async ({ body, auth }) => {
+      const email = body.email.toLowerCase().trim();
+      const existing = await prisma.allowedAdminEmail.findUnique({ where: { email } });
+      if (existing) {
+        throw new Error("Email is already an admin");
+      }
+      
+      const admin = await prisma.allowedAdminEmail.create({
+        data: {
+          email,
+          addedBy: auth.email,
+        },
+      });
+
+      await prisma.adminLog.create({
+        data: {
+          adminId: auth.supabaseId,
+          action: "ADD_ADMIN",
+          targetType: "USER",
+          targetId: email,
+        },
+      });
+
+      return { success: true, data: admin };
+    },
+    { body: t.Object({ email: t.String({ format: "email" }) }) }
+  )
+  .delete(
+    "/admins/:email",
+    async ({ params, auth }) => {
+      const email = params.email.toLowerCase().trim();
+      await prisma.allowedAdminEmail.delete({
+        where: { email },
+      });
+
+      await prisma.adminLog.create({
+        data: {
+          adminId: auth.supabaseId,
+          action: "REMOVE_ADMIN",
+          targetType: "USER",
+          targetId: email,
+        },
+      });
+
+      return { success: true, message: "Admin removed successfully" };
+    }
+  )
+
   // ── Onboard shop with claim code ──────────────────────────────────
   .post(
     "/shops/onboard",

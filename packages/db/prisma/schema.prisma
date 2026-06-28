@@ -343,8 +343,16 @@ model ShopNotification {
 }
 
 // ─────────────────────────────────────────────
-// Admin Audit Log
+// Admin Audit Log & Allowed Admins
 // ─────────────────────────────────────────────
+
+model AllowedAdminEmail {
+  email     String   @id
+  addedBy   String?
+  createdAt DateTime @default(now())
+
+  @@map("allowed_admin_emails")
+}
 
 model AdminLog {
   id         String   @id @default(uuid())

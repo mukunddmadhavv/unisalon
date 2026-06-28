@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, ShieldCheck, ClipboardList, Users, ShieldAlert, LogOut, Scissors, Key,
+  LayoutDashboard, ShieldCheck, ClipboardList, Users, ShieldAlert, LogOut, Scissors, Key, UserCog
 } from "lucide-react";
 import { useUser, useClerk } from "@clerk/react";
 
@@ -10,6 +10,7 @@ const links = [
   { to: "/shops",     icon: ClipboardList,  label: "Shops" },
   { to: "/onboarded-codes", icon: Key,      label: "Onboard Codes" },
   { to: "/users",     icon: Users,          label: "Users" },
+  { to: "/admins",    icon: UserCog,        label: "Manage Admins" },
   { to: "/logs",      icon: ShieldAlert,    label: "Admin Logs" },
 ];
 

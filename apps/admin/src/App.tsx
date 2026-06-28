@@ -11,6 +11,7 @@ import UsersPage from "./pages/UsersPage";
 import LogsPage from "./pages/LogsPage";
 import ManageShopPage from "./pages/ManageShopPage";
 import OnboardedCodesPage from "./pages/OnboardedCodesPage";
+import ManageAdminsPage from "./pages/ManageAdminsPage";
 import toast from "react-hot-toast";
 
 function RequireAdmin({ children, verifying }: { children: React.ReactNode; verifying: boolean }) {
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="/shops/:id/manage" element={<ManageShopPage />} />
         <Route path="/onboarded-codes" element={<OnboardedCodesPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/admins" element={<ManageAdminsPage />} />
         <Route path="/logs" element={<LogsPage />} />
       </Route>
 
