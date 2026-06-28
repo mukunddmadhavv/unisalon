@@ -245,7 +245,7 @@ export default function ShopDetailPage() {
 
       {/* Hero Section Carousel */}
       {slides.length > 0 && (
-        <section className="relative w-full aspect-[16/9] md:max-h-[400px] overflow-hidden bg-black">
+        <section className="relative w-full aspect-[16/9] overflow-hidden bg-black">
           <div 
             className="w-full h-full relative"
             onTouchStart={onTouchStart}
