@@ -1,7 +1,6 @@
-export async function fetchServiceImage(serviceName: string, category: string): Promise<string | undefined> {
-  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
-  if (!unsplashKey) return undefined;
+import { chromium } from "playwright";
 
+export async function fetchServiceImage(serviceName: string, category: string): Promise<string | undefined> {
   // Enhance query to get better salon/beauty related results
   let query = `${serviceName}`;
   if (category && category !== "OTHER") {
@@ -13,21 +12,40 @@ export async function fetchServiceImage(serviceName: string, category: string): 
     query += " salon beauty";
   }
 
+  let browser;
   try {
-    const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${unsplashKey}&per_page=1&orientation=landscape`);
+    // Launch headless chromium
+    // Note: requires `npx playwright install chromium` on the server
+    browser = await chromium.launch({ 
+      headless: true, 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    });
     
-    if (!res.ok) {
-      console.warn(`Unsplash API error: ${res.status} ${res.statusText}`);
-      return undefined;
-    }
-
-    const data = await res.json() as any;
-    if (data && data.results && data.results.length > 0) {
-      // Return the regular sized image URL
-      return data.results[0].urls.regular;
+    const page = await browser.newPage();
+    
+    // Navigate to Unsplash search
+    await page.goto(`https://unsplash.com/s/photos/${encodeURIComponent(query)}?orientation=landscape`, { 
+      waitUntil: 'domcontentloaded', 
+      timeout: 10000 
+    });
+    
+    // Find the first actual photo image (ignoring avatars/icons)
+    const imageLocator = page.locator('img[src*="images.unsplash.com/photo-"]');
+    await imageLocator.first().waitFor({ state: 'attached', timeout: 5000 });
+    
+    const src = await imageLocator.first().getAttribute('src');
+    
+    if (src) {
+      // Return a clean, high-quality URL by stripping existing query params and adding our own
+      const baseUrl = src.split('?')[0];
+      return `${baseUrl}?w=1080&q=75&fit=crop&auto=format`;
     }
   } catch (err) {
-    console.error("Failed to fetch image from Unsplash", err);
+    console.error("Failed to fetch image via Playwright scraper", err);
+  } finally {
+    if (browser) {
+      await browser.close().catch(console.error);
+    }
   }
   
   return undefined;
